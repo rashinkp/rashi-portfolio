@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useState } from 'react'
 import type { SVGProps } from 'react'
+import { AspectRatio } from '@astryxdesign/core/AspectRatio'
 import { Button } from '@astryxdesign/core/Button'
 import { Card } from '@astryxdesign/core/Card'
 import { Center } from '@astryxdesign/core/Center'
@@ -164,6 +165,8 @@ const featuredProjects = [
       'Socket.IO chat and notifications',
     ],
     stack: ['Next.js', 'TypeScript', 'Stripe', 'Socket.IO', 'Docker'],
+    image: '/projects/byway-preview.png',
+    imageAlt: 'ByWay learning platform landing page',
     live: 'https://byway-3yj3.onrender.com/',
     github: 'https://github.com/rashinkp/byway',
   },
@@ -179,6 +182,8 @@ const featuredProjects = [
       'Live stock and order updates on AWS',
     ],
     stack: ['React', 'Node.js', 'MongoDB', 'Razorpay', 'AWS'],
+    image: '/projects/mobilify-preview.png',
+    imageAlt: 'Mobilify electronics storefront landing page',
     live: 'https://mobilify-two.vercel.app/',
     github: 'https://github.com/rashinkp/mobilify',
   },
@@ -489,6 +494,16 @@ function PortfolioPage({ themeMode, onThemeModeChange }: AppProps) {
                 {featuredProjects.map((project) => (
                   <Card key={project.name} padding={6} elevation="low" data-reveal="card">
                     <VStack gap={4} height="100%">
+                      {project.image && project.imageAlt ? (
+                        <AspectRatio ratio={16 / 9} fit="cover">
+                          <img
+                            src={project.image}
+                            alt={project.imageAlt}
+                            loading="lazy"
+                            data-project-image
+                          />
+                        </AspectRatio>
+                      ) : null}
                       <VStack gap={1}>
                         <Text type="supporting" color="accent">{project.type}</Text>
                         <Heading level={3}>{project.name}</Heading>

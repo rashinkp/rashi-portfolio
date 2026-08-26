@@ -31,6 +31,15 @@
 }
 
 @layer components {
+  [data-project-image] {
+    border-radius: var(--radius-inner);
+    outline: var(--border-width) solid light-dark(
+      rgba(0, 0, 0, 0.1),
+      rgba(255, 255, 255, 0.1)
+    );
+    outline-offset: calc(var(--border-width) * -1);
+  }
+
   html[data-motion="ready"] [data-reveal] {
     opacity: 0;
     transform: translateY(var(--spacing-4)) scale(0.985);
