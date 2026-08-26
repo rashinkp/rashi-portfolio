@@ -25,28 +25,130 @@ import { neutralTheme } from '@astryxdesign/theme-neutral/built'
 const skillGroups = [
   {
     title: 'Frontend',
-    skills: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Zustand', 'Redux Toolkit'],
+    skills: [
+      'React',
+      'Next.js',
+      'TypeScript',
+      'React Router',
+      'TanStack Query',
+      'React Hook Form',
+      'Tailwind CSS',
+      'Responsive UI',
+    ],
   },
   {
     title: 'Backend',
-    skills: ['Node.js', 'Express.js', 'NestJS', 'REST APIs', 'JWT', 'Multer'],
+    skills: [
+      'Node.js',
+      'Express',
+      'NestJS',
+      'REST APIs',
+      'Zod',
+    ],
   },
   {
-    title: 'Data & storage',
-    skills: ['MongoDB', 'SQL', 'AWS S3', 'Cloudinary', 'Indexing', 'Aggregation'],
+    title: 'Databases',
+    skills: [
+      'MongoDB',
+      'MySQL',
+      'PostgreSQL',
+      'SQL',
+      'Kysely',
+      'Indexing',
+      'Aggregation',
+    ],
   },
   {
-    title: 'Cloud & delivery',
-    skills: ['AWS EC2', 'Docker', 'NGINX', 'GitHub Actions', 'Render', 'Vercel'],
+    title: 'AI & Python',
+    skills: [
+      'Python',
+      'FastAPI',
+      'Gemini API',
+      'Embeddings',
+      'Resume Parsing',
+      'Candidate Scoring',
+      'Semantic Similarity',
+    ],
+  },
+  {
+    title: 'Authentication & security',
+    skills: [
+      'JWT',
+      'Refresh Tokens',
+      'OAuth 2.0 + PKCE',
+      'RBAC',
+      'HttpOnly Cookies',
+      'Multi-tenant Isolation',
+    ],
   },
   {
     title: 'Integrations',
-    skills: ['Socket.IO', 'Stripe', 'Razorpay', 'Google OAuth', 'Facebook OAuth'],
+    skills: [
+      'Google Calendar',
+      'Microsoft Teams Calendar',
+      'Socket.IO',
+      'WhatsApp Cloud API',
+      'OCI Object Storage',
+      'OneSignal',
+      'Stripe',
+      'Razorpay',
+    ],
+  },
+  {
+    title: 'Cloud & deployment',
+    skills: [
+      'AWS EC2',
+      'Amazon S3',
+      'Railway',
+      'Vercel',
+      'Render',
+      'Docker',
+    ],
   },
   {
     title: 'Engineering',
-    skills: ['Clean Architecture', 'MVC', 'SOLID', 'Jest', 'Postman', 'Git'],
+    skills: [
+      'Clean Architecture',
+      'Modular Monolith',
+      'Vitest',
+      'Pytest',
+      'Playwright',
+      'Sentry',
+      'Git',
+    ],
   },
+]
+
+const offrollsHighlights = [
+  {
+    title: 'Full-stack product workflows',
+    description: 'Multi-role React interfaces and modular TypeScript REST APIs.',
+  },
+  {
+    title: 'AI-assisted hiring',
+    description: 'Resume parsing, candidate scoring, and screening workflows.',
+  },
+  {
+    title: 'Calendar automation',
+    description: 'Google Calendar and Microsoft Teams calendar integration with OAuth 2.0 and PKCE.',
+  },
+  {
+    title: 'Security and real-time systems',
+    description: 'Authentication, RBAC, live updates, and market-aware data isolation.',
+  },
+]
+
+const offrollsStack = [
+  'React',
+  'TypeScript',
+  'Node.js',
+  'Express',
+  'MySQL',
+  'Python',
+  'FastAPI',
+  'Gemini',
+  'Socket.IO',
+  'OAuth 2.0',
 ]
 
 const featuredProjects = [
@@ -228,7 +330,7 @@ function PortfolioPage({ themeMode, onThemeModeChange }: AppProps) {
           <VStack as="main" id="top" gap={0}>
             <VStack as="section" gap={6} maxWidth="60ch" paddingBlock={10}>
               <Text type="supporting" color="accent" data-reveal="hero-1">
-                Full Stack Developer · MERN focus · 8 months of professional experience
+                Full Stack Developer · MERN and SaaS products · Professional experience since January 2026
               </Text>
               <Heading level={1} type="display-1" textWrap="balance" data-reveal="hero-2">
                 I build full-stack products that work end to end.
@@ -269,10 +371,10 @@ function PortfolioPage({ themeMode, onThemeModeChange }: AppProps) {
               <Text type="supporting" color="accent">About</Text>
               <Heading level={2}>Building beyond the interface</Heading>
               <Text color="secondary" textWrap="pretty">
-                My work spans frontend and backend development—from responsive React and Next.js
-                experiences to Node.js services, MongoDB schema design, authentication flows,
-                payments, webhooks, and deployment on AWS with Docker. I care about modular code,
-                reliable user journeys, and understanding how the whole system fits together.
+                My work spans responsive React interfaces, TypeScript APIs, secure authentication,
+                AI-assisted workflows, real-time communication, and cloud deployment. I care about
+                modular code, reliable user journeys, and understanding how the whole product fits
+                together.
               </Text>
             </VStack>
 
@@ -287,10 +389,10 @@ function PortfolioPage({ themeMode, onThemeModeChange }: AppProps) {
             >
               <VStack gap={2} maxWidth="60ch">
                 <Text type="supporting" color="accent">Experience</Text>
-                <Heading level={2}>Working on a product used for real hiring</Heading>
+                <Heading level={2}>Building recruitment workflows across web, APIs, and AI</Heading>
                 <Text color="secondary" textWrap="pretty">
-                  My first professional role is giving me hands-on experience building and
-                  improving a live product with a working team.
+                  At Offrolls, I help develop a multi-role recruitment platform for employers,
+                  recruiters, vendors, candidates, and administrators.
                 </Text>
               </VStack>
               <Card padding={6} elevation="low">
@@ -300,15 +402,33 @@ function PortfolioPage({ themeMode, onThemeModeChange }: AppProps) {
                       <Heading level={3}>Software Developer</Heading>
                       <Text color="accent">Offrolls · Bengaluru, India</Text>
                     </VStack>
-                    <Token label="January 2026 – Present" size="sm" />
+                    <Token label="Since January 2026" size="sm" />
                   </HStack>
                   <VStack maxWidth="60ch">
                     <Text color="secondary" textWrap="pretty">
-                      I work on Offrolls, a talent crowdsourcing platform that connects employers
-                      with independent recruiters and staffing agencies. I contribute to product
-                      development and ongoing improvements across the application.
+                      The product supports hiring operations across India and Kuwait, including
+                      job and application management, candidate screening, interview scheduling,
+                      subscriptions, payouts, and administrative workflows.
                     </Text>
                   </VStack>
+                  <List listStyle="disc" density="compact" header="Selected contributions">
+                    {offrollsHighlights.map((highlight) => (
+                      <ListItem
+                        key={highlight.title}
+                        label={highlight.title}
+                        description={
+                          <Text color="secondary" textWrap="pretty">
+                            {highlight.description}
+                          </Text>
+                        }
+                      />
+                    ))}
+                  </List>
+                  <HStack gap={1} wrap="wrap">
+                    {offrollsStack.map((item) => (
+                      <Token key={item} label={item} size="sm" />
+                    ))}
+                  </HStack>
                   <HStack gap={2} wrap="wrap">
                     <Button
                       label="Company website"
