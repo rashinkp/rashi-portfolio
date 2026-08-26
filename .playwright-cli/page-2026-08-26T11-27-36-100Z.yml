@@ -1,0 +1,223 @@
+- generic [ref=e5]:
+  - banner [ref=e8]:
+    - link "Rashin K P" [ref=e9] [cursor=pointer]:
+      - /url: "#top"
+      - status
+    - navigation "Main navigation" [ref=e12]:
+      - link "About" [ref=e13] [cursor=pointer]:
+        - /url: "#about"
+        - status
+      - link "Skills" [ref=e16] [cursor=pointer]:
+        - /url: "#skills"
+        - status
+      - link "Projects" [ref=e19] [cursor=pointer]:
+        - /url: "#projects"
+        - status
+      - link "Contact" [ref=e22] [cursor=pointer]:
+        - /url: "#contact"
+        - status
+  - main [ref=e28]:
+    - generic [ref=e29]:
+      - generic [ref=e30]: Full Stack Developer · MERN focus · 8 months of professional experience
+      - heading "I build full-stack products that work end to end." [level=1] [ref=e31]
+      - generic [ref=e32]: I’m Rashin K P, a self-taught developer focused on scalable web applications, clean architecture, secure APIs, real-time systems, and cloud deployment.
+      - generic [ref=e33]:
+        - link "Explore projects" [ref=e34] [cursor=pointer]:
+          - /url: "#projects"
+          - status
+        - link "Download résumé" [ref=e37] [cursor=pointer]:
+          - /url: /resume_rashin.pdf
+          - status
+        - link "GitHub" [ref=e40] [cursor=pointer]:
+          - /url: https://github.com/rashinkp
+          - status
+    - generic [ref=e45]:
+      - generic [ref=e46]: About
+      - heading "Building beyond the interface" [level=2] [ref=e47]
+      - generic [ref=e48]: My work spans frontend and backend development—from responsive React and Next.js experiences to Node.js services, MongoDB schema design, authentication flows, payments, webhooks, and deployment on AWS with Docker. I care about modular code, reliable user journeys, and understanding how the whole system fits together.
+    - separator [ref=e49]
+    - generic [ref=e51]:
+      - generic [ref=e52]:
+        - generic [ref=e53]: Skills
+        - heading "Tools I use to ship products" [level=2] [ref=e54]
+        - generic [ref=e55]: A practical stack covering product interfaces, APIs, databases, integrations, testing, and delivery.
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - heading "Frontend" [level=3] [ref=e58]
+          - generic [ref=e59]:
+            - generic [ref=e60]: React
+            - generic [ref=e62]: Next.js
+            - generic [ref=e64]: TypeScript
+            - generic [ref=e66]: Tailwind CSS
+            - generic [ref=e68]: Zustand
+            - generic [ref=e70]: Redux Toolkit
+        - generic [ref=e72]:
+          - heading "Backend" [level=3] [ref=e73]
+          - generic [ref=e74]:
+            - generic [ref=e75]: Node.js
+            - generic [ref=e77]: Express.js
+            - generic [ref=e79]: NestJS
+            - generic [ref=e81]: REST APIs
+            - generic [ref=e83]: JWT
+            - generic [ref=e85]: Multer
+        - generic [ref=e87]:
+          - heading "Data & storage" [level=3] [ref=e88]
+          - generic [ref=e89]:
+            - generic [ref=e90]: MongoDB
+            - generic [ref=e92]: SQL
+            - generic [ref=e94]: AWS S3
+            - generic [ref=e96]: Cloudinary
+            - generic [ref=e98]: Indexing
+            - generic [ref=e100]: Aggregation
+        - generic [ref=e102]:
+          - heading "Cloud & delivery" [level=3] [ref=e103]
+          - generic [ref=e104]:
+            - generic [ref=e105]: AWS EC2
+            - generic [ref=e107]: Docker
+            - generic [ref=e109]: NGINX
+            - generic [ref=e111]: GitHub Actions
+            - generic [ref=e113]: Render
+            - generic [ref=e115]: Vercel
+        - generic [ref=e117]:
+          - heading "Integrations" [level=3] [ref=e118]
+          - generic [ref=e119]:
+            - generic [ref=e120]: Socket.IO
+            - generic [ref=e122]: Stripe
+            - generic [ref=e124]: Razorpay
+            - generic [ref=e126]: Google OAuth
+            - generic [ref=e128]: Facebook OAuth
+        - generic [ref=e130]:
+          - heading "Engineering" [level=3] [ref=e131]
+          - generic [ref=e132]:
+            - generic [ref=e133]: Clean Architecture
+            - generic [ref=e135]: MVC
+            - generic [ref=e137]: SOLID
+            - generic [ref=e139]: Jest
+            - generic [ref=e141]: Postman
+            - generic [ref=e143]: Git
+    - separator [ref=e145]
+    - generic [ref=e147]:
+      - generic [ref=e148]:
+        - generic [ref=e149]: Selected work
+        - heading "Products built around real workflows" [level=2] [ref=e150]
+        - generic [ref=e151]: Two full-stack platforms that bring together authentication, payments, real-time behavior, and production deployment.
+      - generic [ref=e152]:
+        - generic [ref=e154]:
+          - generic [ref=e155]:
+            - generic [ref=e156]: Learning platform
+            - heading "ByWay" [level=3] [ref=e157]
+          - generic [ref=e158]: A multi-role e-learning platform where students purchase courses, learn through interactive content, apply as tutors, and earn certificates.
+          - generic [ref=e159]:
+            - generic [ref=e160]: What it includes
+            - list "What it includes" [ref=e161]:
+              - listitem [ref=e162]:
+                - generic [ref=e165]: Role-based access and structured tutor onboarding
+              - listitem [ref=e167]:
+                - generic [ref=e170]: Google and Facebook OAuth authentication
+              - listitem [ref=e172]:
+                - generic [ref=e175]: Stripe payments with webhook validation
+              - listitem [ref=e177]:
+                - generic [ref=e180]: Real-time chat and notifications with Socket.IO
+          - generic [ref=e182]:
+            - generic [ref=e183]: Next.js
+            - generic [ref=e185]: TypeScript
+            - generic [ref=e187]: Stripe
+            - generic [ref=e189]: Socket.IO
+            - generic [ref=e191]: Docker
+          - generic [ref=e193]:
+            - link "View live" [ref=e194] [cursor=pointer]:
+              - /url: https://byway-3yj3.onrender.com/
+              - status
+            - link "View code" [ref=e197] [cursor=pointer]:
+              - /url: https://github.com/rashinkp/byway
+              - status
+        - generic [ref=e201]:
+          - generic [ref=e202]:
+            - generic [ref=e203]: E-commerce platform
+            - heading "Mobilify" [level=3] [ref=e204]
+          - generic [ref=e205]: An end-to-end commerce system with secure checkout, wallet support, and automated inventory and order workflows.
+          - generic [ref=e206]:
+            - generic [ref=e207]: What it includes
+            - list "What it includes" [ref=e208]:
+              - listitem [ref=e209]:
+                - generic [ref=e212]: Redux Toolkit and RTK Query state architecture
+              - listitem [ref=e214]:
+                - generic [ref=e217]: Node.js, Express, and MongoDB backend
+              - listitem [ref=e219]:
+                - generic [ref=e222]: Razorpay payments, refunds, and wallet transactions
+              - listitem [ref=e224]:
+                - generic [ref=e227]: Real-time stock and order updates deployed on AWS
+          - generic [ref=e229]:
+            - generic [ref=e230]: React
+            - generic [ref=e232]: Node.js
+            - generic [ref=e234]: MongoDB
+            - generic [ref=e236]: Razorpay
+            - generic [ref=e238]: AWS
+          - generic [ref=e240]:
+            - link "View live" [ref=e241] [cursor=pointer]:
+              - /url: https://mobilify-two.vercel.app/
+              - status
+            - link "View code" [ref=e244] [cursor=pointer]:
+              - /url: https://github.com/rashinkp/mobilify
+              - status
+    - generic [ref=e249]:
+      - heading "More projects" [level=2] [ref=e251]
+      - list "More projects" [ref=e252]:
+        - listitem [ref=e253] [cursor=pointer]:
+          - link "LinkUp — Real-Time Chat One-to-one messaging with live delivery, presence updates, dynamic theming, and an event-driven React, Express, MongoDB, and Socket.IO architecture." [ref=e254]:
+            - /url: https://github.com/rashinkp/linkup
+            - generic [ref=e255]: LinkUp — Real-Time Chat
+            - generic [ref=e256]: One-to-one messaging with live delivery, presence updates, dynamic theming, and an event-driven React, Express, MongoDB, and Socket.IO architecture.
+        - listitem [ref=e257] [cursor=pointer]:
+          - link "Wholesale Delivery Management A NestJS logistics system for wholesalers, vendors, inventory, and delivery orders with JWT authentication and role-based access." [ref=e258]:
+            - /url: https://github.com/rashinkp/Delivery-Management
+            - generic [ref=e259]: Wholesale Delivery Management
+            - generic [ref=e260]: A NestJS logistics system for wholesalers, vendors, inventory, and delivery orders with JWT authentication and role-based access.
+        - listitem [ref=e261] [cursor=pointer]:
+          - link "Aadhaar OCR Extraction A document-processing service using Node.js, Express, Tesseract OCR, and MongoDB to validate Aadhaar images and extract user details." [ref=e262]:
+            - /url: https://github.com/rashinkp/adhaar-ocr
+            - generic [ref=e263]: Aadhaar OCR Extraction
+            - generic [ref=e264]: A document-processing service using Node.js, Express, Tesseract OCR, and MongoDB to validate Aadhaar images and extract user details.
+        - listitem [ref=e265] [cursor=pointer]:
+          - link "Student Management System A record and attendance platform with Google OAuth, admin CRUD workflows, Express, HBS, MongoDB, and an MVC structure." [ref=e266]:
+            - /url: https://github.com/rashinkp/Student-Management-System
+            - generic [ref=e267]: Student Management System
+            - generic [ref=e268]: A record and attendance platform with Google OAuth, admin CRUD workflows, Express, HBS, MongoDB, and an MVC structure.
+    - separator [ref=e269]
+    - generic [ref=e271]:
+      - generic [ref=e272]:
+        - generic [ref=e273]: Education
+        - heading "Learning by building" [level=2] [ref=e274]
+      - generic [ref=e275]:
+        - generic [ref=e276]: Education and training
+        - list "Education and training" [ref=e277]:
+          - listitem [ref=e278]:
+            - generic [ref=e279]:
+              - generic [ref=e280]: MERN Stack Development — Brocamp (Brototype)
+              - generic [ref=e281]: Intensive full-stack development program
+            - generic [ref=e282]: 2024 – Present
+          - listitem [ref=e284]:
+            - generic [ref=e285]:
+              - generic [ref=e286]: Bachelor of Computer Applications
+              - generic [ref=e287]: University of Calicut, Kerala
+            - generic [ref=e288]: 2021 – 2024
+    - generic [ref=e292]:
+      - generic [ref=e293]: Contact
+      - heading "Have a project or opportunity in mind?" [level=2] [ref=e294]
+      - generic [ref=e295]: I’m open to full-stack development opportunities and collaborations where I can contribute, learn, and help ship useful software.
+      - generic [ref=e296]:
+        - link "Email me" [ref=e297] [cursor=pointer]:
+          - /url: mailto:rashinkp001@gmail.com
+          - status
+        - link "LinkedIn" [ref=e300] [cursor=pointer]:
+          - /url: https://www.linkedin.com/in/rashinkp/
+          - status
+        - link "LeetCode" [ref=e303] [cursor=pointer]:
+          - /url: https://leetcode.com/u/rashinkp/
+          - status
+    - separator [ref=e306]
+    - generic [ref=e308]:
+      - generic [ref=e309]: Rashin K P · Full Stack Developer
+      - link "Back to top" [ref=e310] [cursor=pointer]:
+        - /url: "#top"
+        - status

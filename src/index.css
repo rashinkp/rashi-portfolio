@@ -1,0 +1,71 @@
+@layer reset, theme, base, astryx-base, astryx-theme, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "@astryxdesign/core/reset.css";
+@import "@astryxdesign/core/astryx.css";
+@import "@astryxdesign/theme-neutral/theme.css";
+@import "@astryxdesign/core/tailwind-theme.css";
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--color-background-body);
+    color: var(--color-text-primary);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root {
+    min-height: 100svh;
+  }
+
+  ::selection {
+    color: var(--color-on-accent);
+    background: var(--color-accent);
+  }
+}
+
+@layer components {
+  html[data-motion="ready"] [data-reveal] {
+    opacity: 0;
+    transform: translateY(var(--spacing-4)) scale(0.985);
+    transition-property: opacity, transform;
+    transition-duration: var(--duration-medium);
+    transition-timing-function: var(--ease-standard);
+  }
+
+  html[data-motion="ready"] [data-reveal][data-revealed="true"] {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  html[data-motion="ready"] [data-reveal="hero-2"] {
+    transition-delay: var(--duration-fast-min);
+  }
+
+  html[data-motion="ready"] [data-reveal="hero-3"] {
+    transition-delay: var(--duration-fast);
+  }
+
+  html[data-motion="ready"] [data-reveal="hero-4"],
+  html[data-motion="ready"] [data-reveal="card"]:nth-child(even) {
+    transition-delay: var(--duration-fast-max);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  html[data-motion="ready"] [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
