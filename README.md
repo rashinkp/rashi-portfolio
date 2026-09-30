@@ -70,7 +70,10 @@ Open the local URL shown by Vite in your browser.
 │   ├── favicon.svg
 │   └── resume_rashin.pdf
 ├── src/
-│   ├── App.tsx
+│   ├── components/  # Page header, footer, and sections
+│   ├── data/        # Skills, experience, and projects
+│   ├── hooks/       # Theme preference and scroll reveals
+│   ├── App.tsx      # Page composition
 │   ├── index.css
 │   └── main.tsx
 ├── index.html
@@ -81,6 +84,10 @@ Open the local URL shown by Vite in your browser.
 ## Design system
 
 The interface uses ASTRYX components and the neutral theme. Layout, spacing, color, typography, motion, elevation, and theme behavior follow the design system tokens instead of custom hardcoded values.
+
+## Social sharing
+
+Open Graph and Twitter summary metadata are included in `index.html`. Once the public deployment URL is confirmed, add its canonical URL and `og:url`. A hosted preview image can then be added with an absolute URL.
 
 ## Contact
 
