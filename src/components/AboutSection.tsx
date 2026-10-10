@@ -1,26 +1,56 @@
-import { revealClassName } from '../hooks/useRevealOnScroll'
+import { useRef } from 'react'
+import { HStack, VStack } from '@astryxdesign/core/Stack'
+import { Grid } from '@astryxdesign/core/Grid'
 import { Heading } from '@astryxdesign/core/Heading'
-import { VStack } from '@astryxdesign/core/Stack'
 import { Text } from '@astryxdesign/core/Text'
+import { SectionTitle } from './SectionTitle'
+import { ExperienceSection } from './ExperienceSection'
+import { SocialLinks } from './SocialLinks'
+import { SkillsSection } from './SkillsSection'
+import { StickyNote } from './StickyNote'
+import { AboutPortrait } from './AboutPortrait'
+import { useViewportWidth } from '../hooks/useViewportWidth'
+
+const notes = [
+  { label: 'MERN training', color: 'green', text: 'MERN Stack\nBrocamp\n2024–25', position: '', angle: -2 },
+  { label: 'Product craft', color: 'pink', text: 'Building so\nyou don’t\nRAGE QUIT', position: 'mt-10', angle: 2 },
+  { label: 'Always learning', color: 'yellow', text: 'Curiosity led.\nGoogle helped.\nStill learning.', position: '', angle: -1 },
+  { label: 'Location', color: 'cyan', text: '📍\nKerala →\nBengaluru', position: 'mt-10', angle: 1 },
+  { label: 'Thoughtful experiences', color: 'purple', text: 'Less friction.\nMore\n“oh, nice!”', position: '', angle: -1 },
+  { label: 'Move these notes too', color: 'yellow', text: 'These notes\ncan move\ntoo 😆', position: 'mt-10', angle: 2 },
+] as const
+
 
 export function AboutSection() {
+  const bounds = useRef<HTMLElement>(null)
+  // Re-measure note constraints after rotation instead of retaining old drag offsets.
+  const width = useViewportWidth()
+  const mobile = width > 0 && width < 640
   return (
-    <VStack
-      as="section"
-      id="about"
-      gap={3}
-      maxWidth="60ch"
-      paddingBlock={10}
-      data-reveal="section" className={revealClassName}
-    >
-      <Text type="supporting" color="accent">About</Text>
-      <Heading level={2}>Building beyond the interface</Heading>
-      <Text color="secondary" textWrap="pretty">
-        My work spans responsive React interfaces, TypeScript APIs, secure authentication,
-        AI-assisted workflows, real-time communication, and cloud deployment. I care about
-        modular code, reliable user journeys, and understanding how the whole product fits
-        together.
-      </Text>
+    <VStack ref={bounds} as="section" id="about" gap={mobile ? 6 : 10} hAlign="center" className="relative min-w-0 py-8 sm:py-10 md:py-16">
+      <SectionTitle>About</SectionTitle>
+      <HStack gap={mobile ? 6 : 10} wrap="wrap" hAlign="center" vAlign="start" width="100%" maxWidth={800}>
+        <VStack gap={mobile ? 4 : 8} width={mobile ? 248 : 280} maxWidth="100%" hAlign="center" className="min-w-0 shrink-0">
+          <VStack gap={0} hAlign="center" className="relative" data-reveal="about-copy">
+            <AboutPortrait />
+            <Heading level={3} className="absolute bottom-0 right-0 font-sans! text-2xl! sm:text-3xl!">Yours Truly</Heading>
+          </VStack>
+          <Grid columns={2} gap={0} width="100%" className="gap-y-6! sm:gap-y-10!">
+            {notes.map(note => (
+              <StickyNote key={`${width}-${note.label}`} label={note.label} color={note.color} angle={note.angle} bounds={bounds} enterOnView className={`w-28! sm:w-32! p-2! sm:p-3! ${note.position ? 'mt-6 sm:mt-10' : ''}`}>
+                <VStack hAlign="center" vAlign="center" height="100%" width="100%">
+                  <Text justify="center" weight="bold" className="w-full whitespace-pre! text-sm! sm:text-base! leading-tight!">{note.text}</Text>
+                </VStack>
+              </StickyNote>
+            ))}
+          </Grid>
+        </VStack>
+        <VStack gap={mobile ? 6 : 10} width={mobile ? 320 : 480} maxWidth="100%" hAlign="start" className="min-w-0 shrink-0">
+          <SocialLinks />
+          <SkillsSection />
+          <ExperienceSection />
+        </VStack>
+      </HStack>
     </VStack>
   )
 }

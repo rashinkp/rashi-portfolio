@@ -1,33 +1,56 @@
-import { revealClassName } from '../hooks/useRevealOnScroll'
+import { useReducedMotion } from 'motion/react'
+import { useTheme } from '@astryxdesign/core/theme'
+import { useMediaQuery } from '@astryxdesign/core/hooks'
 import { Grid } from '@astryxdesign/core/Grid'
-import { Heading } from '@astryxdesign/core/Heading'
-import { HStack, VStack } from '@astryxdesign/core/Stack'
+import { VStack } from '@astryxdesign/core/Stack'
 import { Text } from '@astryxdesign/core/Text'
-import { Token } from '@astryxdesign/core/Token'
+import { MotionCard, noteSpring, revealSpring, spacingToken, durationToken } from '../lib/motion'
+import { Heading } from '@astryxdesign/core/Heading'
 import { skillGroups } from '../data/portfolio'
+import { skillLogos } from '../data/skillLogos'
+
+const skills = skillGroups.flatMap(group => group.skills)
 
 export function SkillsSection() {
+  const reduced = useReducedMotion()
+  const { mode } = useTheme()
+  const mobile = useMediaQuery('(max-width: 639px)')
+
   return (
-    <VStack as="section" id="skills" gap={6} paddingBlock={10} data-reveal="section" className={revealClassName}>
-      <VStack gap={2} maxWidth="60ch">
-        <Text type="supporting" color="accent">Skills</Text>
-        <Heading level={2}>Tools I use to ship products</Heading>
-        <Text color="secondary">
-          A practical stack covering product interfaces, APIs, databases, integrations,
-          testing, and delivery.
-        </Text>
-      </VStack>
-      <Grid columns={{ minWidth: 280, max: 2, repeat: 'fit' }} gap={6}>
-        {skillGroups.map((group) => (
-          <VStack key={group.title} gap={2}>
-            <Heading level={3}>{group.title}</Heading>
-            <HStack gap={1} wrap="wrap">
-              {group.skills.map((skill) => (
-                <Token key={skill} label={skill} size="sm" />
-              ))}
-            </HStack>
-          </VStack>
-        ))}
+    <VStack as="section" id="skills" gap={4} hAlign="start" className="min-w-0 w-full">
+      <Heading level={3} className="text-2xl! text-(--color-text-red)!" data-reveal="toolkit-heading">Tool Kit</Heading>
+      <Grid columns={mobile ? 3 : 4} gap={3} width="100%" maxWidth={408}>
+        {skills.map((skill, index) => {
+          const logo = skillLogos[skill]
+          return (
+            <MotionCard
+              key={skill}
+              variant="transparent"
+              padding={1}
+              elevation="none"
+              className="group cursor-pointer aspect-square min-w-0 rounded-lg! border-(length:--focus-outline-width)! border-primary! transition-colors duration-(--duration-medium-min) ease-out hover:bg-inverted! motion-reduce:transition-none"
+              data-skill-tile={skill}
+              initial={reduced ? false : { opacity: 0, y: spacingToken('--spacing-8') }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ ...revealSpring, delay: reduced ? 0 : (index % 4) * durationToken(document.documentElement, '--duration-fast-min', 0.13) }}
+              whileHover={reduced ? undefined : { scale: 1.06, rotate: index % 2 ? 4 : -4, transition: noteSpring }}
+            >
+              <VStack gap={1} hAlign="center" vAlign="center" height="100%">
+                {logo ? (
+                  <img
+                    src={`/skills/${logo.file}.svg`}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className={`h-10 w-10 object-contain transition-[filter,background-color] duration-(--duration-medium-min) ease-out motion-reduce:transition-none ${logo.monochrome ? mode === 'dark' ? 'invert group-hover:invert-0' : 'group-hover:invert' : ''} ${['aws', 'mysql', 'docker'].includes(logo.file) ? `rounded-md p-1 group-hover:bg-on-dark ${mode === 'dark' ? 'bg-on-dark' : ''}` : ''}`}
+                  />
+                ) : null}
+                <Text justify="center" weight="bold" textWrap="nowrap" className={`${skill === 'Playwright' ? 'text-sm! sm:text-base!' : 'text-base! sm:text-lg!'} leading-tight! group-hover:text-body! transition-colors duration-(--duration-medium-min) ease-out motion-reduce:transition-none`}>{skill === 'Tailwind CSS' ? 'Tailwind' : skill === 'Gemini API' ? 'Gemini' : skill === 'OAuth 2.0' ? 'OAuth' : skill}</Text>
+              </VStack>
+            </MotionCard>
+          )
+        })}
       </Grid>
     </VStack>
   )

@@ -1,104 +1,42 @@
-import { revealClassName } from '../hooks/useRevealOnScroll'
+import { useReducedMotion } from 'motion/react'
+import { useMediaQuery } from '@astryxdesign/core/hooks'
 import { AspectRatio } from '@astryxdesign/core/AspectRatio'
 import { Button } from '@astryxdesign/core/Button'
-import { Card } from '@astryxdesign/core/Card'
 import { Grid } from '@astryxdesign/core/Grid'
 import { Heading } from '@astryxdesign/core/Heading'
-import { List, ListItem } from '@astryxdesign/core/List'
 import { HStack, VStack } from '@astryxdesign/core/Stack'
 import { Text } from '@astryxdesign/core/Text'
-import { Token } from '@astryxdesign/core/Token'
-import { featuredProjects, additionalProjects } from '../data/portfolio'
+import { MotionCard, noteSpring, spacingToken } from '../lib/motion'
+import { featuredProjects } from '../data/portfolio'
+import { SectionTitle } from './SectionTitle'
 
 export function ProjectsSection() {
+  const reduced = useReducedMotion()
+  const mobile = useMediaQuery('(max-width: 639px)')
   return (
-    <VStack as="section" id="projects" gap={8} paddingBlock={10} data-reveal="section" className={revealClassName}>
-      <VStack gap={2} maxWidth="60ch">
-        <Text type="supporting" color="accent">Selected work</Text>
-        <Heading level={2}>Products built around real workflows</Heading>
-        <Text color="secondary">
-          Two full-stack platforms that bring together authentication, payments,
-          real-time behavior, and production deployment.
-        </Text>
-      </VStack>
-      <Grid columns={{ minWidth: 320, max: 2, repeat: 'fit' }} gap={4}>
-        {featuredProjects.map((project) => (
-          <Card key={project.name} padding={6} elevation="low" data-reveal="card" className={`${revealClassName} motion-safe:even:delay-(--duration-fast-max)`}>
-            <VStack gap={4} height="100%">
-              {project.image && project.imageAlt ? (
-                <AspectRatio ratio={16 / 9} fit="cover">
-                  <img
-                    src={project.image}
-                    alt={project.imageAlt}
-                    loading="lazy"
-                    data-project-image
-                    className="rounded-sm border-(length:--border-width) border-border"
-                  />
-                </AspectRatio>
-              ) : null}
-              <VStack gap={1}>
+    <VStack as="section" id="projects" gap={8} hAlign="center" className="min-w-0 py-10 md:py-16">
+      <SectionTitle>Projects</SectionTitle>
+      <VStack gap={4} width="100%" maxWidth={640}>
+        {featuredProjects.map(project => (
+          <MotionCard key={project.name} variant="transparent" padding={mobile ? 2 : 3} elevation="none" data-reveal="project" className="min-w-0 rounded-lg! border-(length:--focus-outline-width)! border-secondary/60!" whileHover={reduced ? undefined : { y: -spacingToken('--spacing-1') }} transition={noteSpring}>
+            <Grid columns={{ minWidth: 220, max: 2, repeat: 'fit' }} gap={mobile ? 3 : 4} align="center">
+              <AspectRatio ratio={mobile ? 2 : 16 / 10} fit="cover">
+                <img src={project.image} alt={project.imageAlt} loading="lazy" data-project-image className="w-full h-full object-cover rounded-md" />
+              </AspectRatio>
+              <VStack gap={mobile ? 1 : 2} className="min-w-0">
                 <Text type="supporting" color="accent">{project.type}</Text>
-                <Heading level={3}>{project.name}</Heading>
+                <Heading level={3} className="text-xl! sm:text-2xl!">{project.name}</Heading>
+                <Text textWrap="pretty" className="text-base! sm:text-lg!">{project.description}</Text>
+                <HStack gap={2} wrap="wrap">
+                  <Button label="Try it ↗" variant="ghost" href={project.live} target="_blank" rel="noopener noreferrer" className="min-h-10!" />
+                  <Button label="Code ↗" variant="ghost" href={project.github} target="_blank" rel="noopener noreferrer" className="min-h-10!" />
+                </HStack>
               </VStack>
-              <Text color="secondary" textWrap="pretty">{project.description}</Text>
-              <List listStyle="disc" density="compact" header="Implementation highlights">
-                {project.highlights.map((highlight) => (
-                  <ListItem
-                    key={highlight.title}
-                    label={highlight.title}
-                    description={
-                      <Text color="secondary" textWrap="pretty">
-                        {highlight.description}
-                      </Text>
-                    }
-                  />
-                ))}
-              </List>
-              <HStack gap={1} wrap="wrap">
-                {project.stack.map((item) => (
-                  <Token key={item} label={item} size="sm" />
-                ))}
-              </HStack>
-              <HStack gap={2} wrap="wrap">
-                <Button
-                  label="View live"
-                  variant="primary"
-                  href={project.live}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                />
-                <Button
-                  label="View code"
-                  variant="secondary"
-                  href={project.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                />
-              </HStack>
-            </VStack>
-          </Card>
+            </Grid>
+          </MotionCard>
         ))}
-      </Grid>
-      <List
-        density="spacious"
-        hasDividers
-        header={<Heading level={2}>More projects</Heading>}
-        data-reveal="list" className={revealClassName}
-      >
-        {additionalProjects.map((project) => (
-          <ListItem
-            key={project.name}
-            label={project.name}
-            description={
-              <Text color="secondary" maxLines={2}>
-                {project.description}
-              </Text>
-            }
-            href={project.github}
-            target="_blank"
-          />
-        ))}
-      </List>
+      </VStack>
+      <Button label="More on GitHub ↗" variant="ghost" href="https://github.com/rashinkp?tab=repositories" target="_blank" rel="noopener noreferrer" className="min-h-10!" />
     </VStack>
   )
 }
