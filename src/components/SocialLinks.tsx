@@ -29,12 +29,12 @@ const profiles = [
   { label: 'Instagram', href: 'https://www.instagram.com/rash.e_/', icon: InstagramIcon },
 ]
 
-export function SocialLinks() {
+export function SocialLinks({ compact = false }: { compact?: boolean }) {
   const reduced = useReducedMotion()
   return (
-    <VStack gap={4} hAlign="start" data-reveal="social-links">
-      <Heading level={3} className="text-2xl! text-(--color-text-purple)!">Stalk Me Here</Heading>
-      <HStack as="nav" aria-label="Social profiles" gap={4} wrap="wrap" hAlign="start">
+    <VStack gap={compact ? 3 : 4} hAlign={compact ? 'center' : 'start'} data-reveal="social-links">
+      <Heading level={3} className={`${compact ? 'text-xl!' : 'text-2xl!'} text-(--color-text-purple)!`}>Stalk Me Here</Heading>
+      <HStack as="nav" aria-label="Social profiles" gap={compact ? 2 : 4} wrap="wrap" hAlign="start">
         {profiles.map(profile => (
           <MotionVStack key={profile.label} whileHover={reduced ? undefined : { y: -spacingToken('--spacing-1'), rotate: -8, scale: 1.08 }} whileTap={reduced ? undefined : { scale: 0.96 }} transition={noteSpring}>
             <IconButton label={profile.label} tooltip={profile.label} icon={

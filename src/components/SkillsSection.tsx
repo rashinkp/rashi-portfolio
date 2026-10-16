@@ -19,7 +19,7 @@ export function SkillsSection() {
   return (
     <VStack as="section" id="skills" gap={4} hAlign="start" className="min-w-0 w-full">
       <Heading level={3} className="text-2xl! text-(--color-text-red)!" data-reveal="toolkit-heading">Tool Kit</Heading>
-      <Grid columns={mobile ? 3 : 4} gap={3} width="100%" maxWidth={408}>
+      <Grid columns={4} gap={mobile ? 2 : 3} width="100%" maxWidth={408}>
         {skills.map((skill, index) => {
           const logo = skillLogos[skill]
           return (
@@ -43,10 +43,10 @@ export function SkillsSection() {
                     alt=""
                     loading="lazy"
                     decoding="async"
-                    className={`h-10 w-10 object-contain transition-[filter,background-color] duration-(--duration-medium-min) ease-out motion-reduce:transition-none ${logo.monochrome ? mode === 'dark' ? 'invert group-hover:invert-0' : 'group-hover:invert' : ''} ${['aws', 'mysql', 'docker'].includes(logo.file) ? `rounded-md p-1 group-hover:bg-on-dark ${mode === 'dark' ? 'bg-on-dark' : ''}` : ''}`}
+                    className={`h-8 w-8 sm:h-10 sm:w-10 object-contain transition-[filter,background-color] duration-(--duration-medium-min) ease-out motion-reduce:transition-none ${logo.monochrome ? mode === 'dark' ? 'invert group-hover:invert-0' : 'group-hover:invert' : ''} ${['aws', 'mysql', 'docker'].includes(logo.file) ? `rounded-md p-1 group-hover:bg-on-dark ${mode === 'dark' ? 'bg-on-dark' : ''}` : ''}`}
                   />
                 ) : null}
-                <Text justify="center" weight="bold" textWrap="nowrap" className={`${skill === 'Playwright' ? 'text-sm! sm:text-base!' : 'text-base! sm:text-lg!'} leading-tight! group-hover:text-body! transition-colors duration-(--duration-medium-min) ease-out motion-reduce:transition-none`}>{skill === 'Tailwind CSS' ? 'Tailwind' : skill === 'Gemini API' ? 'Gemini' : skill === 'OAuth 2.0' ? 'OAuth' : skill}</Text>
+                <Text justify="center" weight="bold" textWrap="nowrap" className={`${skill === 'Playwright' ? 'text-xs! sm:text-base!' : 'text-sm! sm:text-lg!'} leading-tight! group-hover:text-body! transition-colors duration-(--duration-medium-min) ease-out motion-reduce:transition-none`}>{skill === 'Tailwind CSS' ? 'Tailwind' : skill === 'Gemini API' ? 'Gemini' : skill === 'OAuth 2.0' ? 'OAuth' : skill}</Text>
               </VStack>
             </MotionCard>
           )

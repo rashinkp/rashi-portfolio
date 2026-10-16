@@ -10,6 +10,11 @@ export function useRevealOnScroll() {
     const elements = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'))
     const animations = new Map<HTMLElement, AnimationPlaybackControls>()
     const cleanupFrames = new Set<number>()
+    // Keep headings inside their own gap while they enter above nearby tiles.
+    const revealDistance = (element: HTMLElement) => {
+      const heading = element.dataset.reveal === 'heading' || element.dataset.reveal === 'toolkit-heading'
+      return parseFloat(getComputedStyle(element).getPropertyValue(heading ? '--spacing-2' : '--spacing-10')) || 0
+    }
     let observer: IntersectionObserver | undefined
     const finish = (element: HTMLElement) => {
       const animation = animations.get(element)
@@ -36,7 +41,7 @@ export function useRevealOnScroll() {
       visible.forEach((entry, index) => {
         const element = entry.target as HTMLElement
         observer?.unobserve(element)
-        const distance = parseFloat(getComputedStyle(element).getPropertyValue('--spacing-10'))
+        const distance = revealDistance(element)
         const animation = animate(element, {
           opacity: [0, 1], y: [Number.isFinite(distance) ? distance : 0, 0],
         }, {
@@ -51,7 +56,7 @@ export function useRevealOnScroll() {
       const box = element.getBoundingClientRect()
       if (box.top < innerHeight && box.bottom > 0) finish(element)
       else {
-        const distance = parseFloat(getComputedStyle(element).getPropertyValue('--spacing-10'))
+        const distance = revealDistance(element)
         // Stage offscreen blocks before observing, so the entrance is visible.
         element.style.opacity = '0'
         element.style.transform = `translateY(${Number.isFinite(distance) ? distance : 0}px)`

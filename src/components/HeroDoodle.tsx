@@ -30,7 +30,7 @@ export function HeroDoodle({ compact = false }: { compact?: boolean }) {
       strokeWidth="2.5"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={`${compact ? 'w-12 h-12' : 'w-24 h-24'} shrink-0 pointer-events-none text-secondary md:absolute md:left-4 lg:left-16 md:top-1/2 md:-translate-y-1/2 md:w-48 md:h-48`}
+      className={`${compact ? 'w-12 h-12 -top-12' : 'w-16 h-16 -top-16'} absolute left-0 shrink-0 pointer-events-none text-secondary md:left-4 lg:left-16 md:top-1/2 md:-translate-y-1/2 md:w-48 md:h-48`}
     >
       {strokes.map((d, index) => (
         <motion.path

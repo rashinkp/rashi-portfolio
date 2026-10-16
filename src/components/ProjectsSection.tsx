@@ -14,13 +14,13 @@ export function ProjectsSection() {
   const reduced = useReducedMotion()
   const mobile = useMediaQuery('(max-width: 639px)')
   return (
-    <VStack as="section" id="projects" gap={8} hAlign="center" className="min-w-0 py-10 md:py-16">
+    <VStack as="section" id="projects" gap={mobile ? 6 : 8} hAlign="center" className="min-w-0 py-8 sm:py-10 md:py-16">
       <SectionTitle>Projects</SectionTitle>
       <VStack gap={4} width="100%" maxWidth={640}>
         {featuredProjects.map(project => (
           <MotionCard key={project.name} variant="transparent" padding={mobile ? 2 : 3} elevation="none" data-reveal="project" className="min-w-0 rounded-lg! border-(length:--focus-outline-width)! border-secondary/60!" whileHover={reduced ? undefined : { y: -spacingToken('--spacing-1') }} transition={noteSpring}>
             <Grid columns={{ minWidth: 220, max: 2, repeat: 'fit' }} gap={mobile ? 3 : 4} align="center">
-              <AspectRatio ratio={mobile ? 2 : 16 / 10} fit="cover">
+              <AspectRatio ratio={mobile ? 12 / 5 : 16 / 10} fit="cover">
                 <img src={project.image} alt={project.imageAlt} loading="lazy" data-project-image className="w-full h-full object-cover rounded-md" />
               </AspectRatio>
               <VStack gap={mobile ? 1 : 2} className="min-w-0">

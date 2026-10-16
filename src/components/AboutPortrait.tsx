@@ -1,14 +1,14 @@
 import { useRef } from 'react'
 import { motion, useInView, useReducedMotion } from 'motion/react'
 
-export function AboutPortrait() {
+export function AboutPortrait({ compact = false }: { compact?: boolean }) {
   const portrait = useRef<SVGSVGElement>(null)
   const visible = useInView(portrait, { amount: 0.5 })
   const reduced = useReducedMotion()
   const active = visible && !reduced
   const idle = { duration: 4.8, repeat: Infinity, ease: [0.37, 0, 0.63, 1] as const }
   return (
-    <svg ref={portrait} viewBox="0 0 240 240" aria-hidden="true" data-about-portrait data-motion-active={active} className="w-48 h-48 sm:w-60 sm:h-60 text-primary">
+    <svg ref={portrait} viewBox="0 0 240 240" aria-hidden="true" data-about-portrait data-motion-active={active} className={`${compact ? 'w-32 h-32' : 'w-48 h-48 sm:w-60 sm:h-60'} text-primary`}>
       <defs><clipPath id="about-portrait-clip"><circle cx="136" cy="96" r="60" /></clipPath></defs>
       <circle cx="136" cy="96" r="60" className="fill-(--color-background-blue)" />
       <g clipPath="url(#about-portrait-clip)">

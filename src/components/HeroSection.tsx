@@ -16,7 +16,7 @@ export function HeroSection() {
   const compact = useMediaQuery('(max-width: 639px) and (max-height: 740px)')
 
   return (
-    <VStack ref={bounds} as="section" aria-label="Introduction" gap={compact ? 2 : mobile ? 4 : 10} vAlign="center" hAlign="center" minHeight={width >= 768 ? 'calc(100svh - var(--spacing-10) - var(--spacing-10) - var(--spacing-4))' : undefined} className={`relative isolate min-w-0 pb-24 sm:py-12 md:py-24 ${compact ? 'pt-0' : 'pt-4'}`}>
+    <VStack ref={bounds} as="section" aria-label="Introduction" gap={compact ? 4 : mobile ? 6 : 10} vAlign="center" hAlign="center" minHeight={width >= 768 ? 'calc(100svh - var(--spacing-10) - var(--spacing-10) - var(--spacing-4))' : undefined} className={`relative isolate min-w-0 pb-12 sm:py-12 md:py-24 ${compact ? 'pt-6' : 'pt-10'}`}>
       <VStack gap={compact ? 2 : mobile ? 3 : 5} hAlign="center" className="relative z-10 w-full text-center md:py-24">
         <HeroDoodle compact={compact} />
         <Heading level={1} type="display-1" justify="center" className={`${compact ? 'text-2xl!' : 'text-3xl!'} sm:text-4xl! md:text-5xl! font-heading!`}>hey, I’m Rashin</Heading>
