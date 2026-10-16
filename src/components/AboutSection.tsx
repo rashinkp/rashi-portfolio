@@ -12,10 +12,10 @@ import { AboutPortrait } from './AboutPortrait'
 import { useViewportWidth } from '../hooks/useViewportWidth'
 
 const notes = [
-  { label: 'MERN training', color: 'green', text: 'MERN Stack\nBrocamp\n2024–25', position: '', angle: -2 },
+  { label: 'Product ownership', color: 'green', text: 'From first\nidea to\n“it works!”', position: '', angle: -2 },
   { label: 'Product craft', color: 'pink', text: 'Building so\nyou don’t\nRAGE QUIT', position: 'mt-10', angle: 2 },
   { label: 'Always learning', color: 'yellow', text: 'Curiosity led.\nGoogle helped.\nStill learning.', position: '', angle: -1 },
-  { label: 'Location', color: 'cyan', text: '📍\nKerala →\nBengaluru', position: 'mt-10', angle: 1 },
+  { label: 'Based in Kerala', color: 'cyan', text: '📍 Kerala\nBuilding\nfrom here.', position: 'mt-10', angle: 1 },
   { label: 'Thoughtful experiences', color: 'purple', text: 'Less friction.\nMore\n“oh, nice!”', position: '', angle: -1 },
   { label: 'Move these notes too', color: 'yellow', text: 'These notes\ncan move\ntoo 😆', position: 'mt-10', angle: 2 },
 ] as const

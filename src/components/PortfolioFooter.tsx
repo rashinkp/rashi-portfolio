@@ -16,7 +16,7 @@ export function PortfolioFooter() {
       paddingBlock={mobile ? 4 : 6}
       className="min-w-0 text-center sm:text-left"
     >
-      <Text type="supporting">Rashin K P · Full Stack Developer</Text>
+      <Text type="supporting">Rashin K P · Full-stack Product Engineer</Text>
       <Button className="min-h-10!" label="Back to top" variant="ghost" size="sm" href="#top" />
     </HStack>
   )

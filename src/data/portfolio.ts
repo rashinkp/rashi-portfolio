@@ -1,13 +1,7 @@
 export const skillGroups = [
   { title: 'Think & create', skills: ['Codex', 'Cursor', 'Claude', 'Figma'] },
-  { title: 'Build & ship', skills: ['Railway', 'Vercel', 'Docker', 'AWS'] },
-  { title: 'Connect & verify', skills: ['MySQL', 'Gemini', 'Playwright', 'Vitest'] },
-]
-
-export const offrollsHighlights = [
-  { title: 'Product workflows', description: 'React interfaces and TypeScript APIs for hiring teams.' },
-  { title: 'AI screening', description: 'Resume parsing and candidate scoring.' },
-  { title: 'Interview scheduling', description: 'Google and Microsoft calendar integrations.' },
+  { title: 'Build & connect', skills: ['TypeScript', 'PostgreSQL', 'MySQL', 'Gemini'] },
+  { title: 'Verify & ship', skills: ['Playwright', 'Railway', 'Docker', 'GitHub Actions'] },
 ]
 
 export const featuredProjects = [

@@ -26,7 +26,7 @@ function DockIcon({ name, ...props }: SVGProps<SVGSVGElement> & { name: IconName
 const destinations = [
   { id: 'top', label: 'Home', icon: 'home' },
   { id: 'about', label: 'About', icon: 'about' },
-  { id: 'projects', label: 'Projects', icon: 'work' },
+  { id: 'projects', label: 'Work', icon: 'work' },
   { id: 'contact', label: 'Contact', icon: 'contact' },
 ] as const
 interface PortfolioHeaderProps { themeMode: ThemeMode; onThemeModeChange: (mode: ThemeMode) => void }
@@ -37,7 +37,7 @@ export function PortfolioHeader() {
     <LayoutHeader className={`px-4! md:px-8! ${compact ? 'py-0!' : 'py-4!'}`}>
       <HStack as="header" hAlign="between" vAlign="center" gap={3}>
         <Button label="Rashin K P ↗" variant="ghost" href="#top" className="min-h-10!" />
-        <Text color="secondary" className="hidden sm:block">A developer’s notebook</Text>
+        <Text color="secondary" className="hidden sm:block">A product engineer’s notebook</Text>
       </HStack>
     </LayoutHeader>
   )

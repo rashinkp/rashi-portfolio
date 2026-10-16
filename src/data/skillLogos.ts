@@ -10,6 +10,8 @@ export const skillLogos: Record<string, { file: string; monochrome?: boolean }> 
   React: { file: 'react' },
   'Next.js': { file: 'nextjs', monochrome: true },
   TypeScript: { file: 'typescript' },
+  PostgreSQL: { file: 'postgresql' },
+  'GitHub Actions': { file: 'githubactions' },
   'Tailwind CSS': { file: 'tailwindcss' },
   'Node.js': { file: 'nodejs' },
   Express: { file: 'express', monochrome: true },

@@ -20,7 +20,7 @@ export function HeroSection() {
       <VStack gap={compact ? 2 : mobile ? 3 : 5} hAlign="center" className="relative z-10 w-full text-center md:py-24">
         <HeroDoodle compact={compact} />
         <Heading level={1} type="display-1" justify="center" className={`${compact ? 'text-2xl!' : 'text-3xl!'} sm:text-4xl! md:text-5xl! font-heading!`}>hey, I’m Rashin</Heading>
-        <Text weight="bold" justify="center" className={`${compact ? 'text-sm! leading-tight!' : 'text-base!'} sm:text-xl! whitespace-pre-line!`}>{mobile ? 'PRODUCT DESIGNER\nBUILDER · ENGINEER' : 'PRODUCT DESIGNER · BUILDER · ENGINEER'}</Text>
+        <Text weight="bold" justify="center" className={`${compact ? 'text-sm! leading-tight!' : 'text-base!'} sm:text-xl! whitespace-pre-line!`}>{mobile ? 'PRODUCT ENGINEER\nBUILDER · DESIGNER' : 'PRODUCT ENGINEER · BUILDER · DESIGNER'}</Text>
         <HStack gap={2} wrap="wrap" hAlign="center">
           <Button label="Explore my work ↗" variant="primary" size="lg" href="#projects" className="min-h-12! rounded-full!" />
           <Button label="Say hello" variant="ghost" size="lg" href="#contact" className="min-h-12!" />
@@ -33,8 +33,8 @@ export function HeroSection() {
         <StickyNote key={`drag-${width}-${compact}`} label="Move these notes" color="pink" angle={3} bounds={bounds} className={`${compact ? 'mt-0 p-2!' : 'mt-4'} md:mt-0 md:absolute md:right-6 md:top-12`}>
           <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" weight="bold" className="text-lg! md:text-xl!">Drag me 😆</Text></VStack>
         </StickyNote>
-        <StickyNote key={`scale-${width}-${compact}`} label="Built to scale" color="cyan" angle={-3} bounds={bounds} className="aspect-4/3! p-2! md:p-4! md:absolute md:right-0 md:bottom-56 md:w-48!">
-          <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" weight="bold" className={`${compact ? 'text-sm! leading-tight!' : 'text-base!'} md:text-xl!`}>Big ideas.<br />Big traffic.<br />No drama.</Text></VStack>
+        <StickyNote key={`scale-${width}-${compact}`} label="Product craft" color="cyan" angle={-3} bounds={bounds} className="aspect-4/3! p-2! md:p-4! md:absolute md:right-0 md:bottom-56 md:w-48!">
+          <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" weight="bold" className={`${compact ? 'text-sm! leading-tight!' : 'text-base!'} md:text-xl!`}>Big ideas.<br />Fewer clicks.<br />Happy humans.</Text></VStack>
         </StickyNote>
         <StickyNote key={`bca-${width}-${compact}`} label="BCA graduate" color="yellow" angle={4} bounds={bounds} className={`aspect-4/3! ${compact ? 'mt-0' : 'mt-4'} p-2! md:p-4! md:mt-0 md:absolute md:left-8 md:bottom-36 md:w-48!`}>
           <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" weight="bold" className={`${compact ? 'text-sm!' : 'text-base!'} md:text-xl!`}>BCA graduate</Text><Text justify="center" className={`${compact ? 'text-xs! leading-tight!' : 'text-sm!'} md:text-base!`}>University of Calicut</Text></VStack>
