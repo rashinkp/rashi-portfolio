@@ -38,7 +38,7 @@ function App() {
         }
         content={
           <LayoutContent isScrollable={false} className="overflow-visible! px-4! md:px-8!">
-            <VStack as="main" id="top" gap={0} className="min-w-0 pb-6 sm:pb-28">
+            <VStack as="main" id="top" gap={0} className="min-w-0 pb-4">
               <HeroSection />
               <AboutSection />
               <ProjectsSection />

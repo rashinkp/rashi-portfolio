@@ -32,7 +32,7 @@ export function SkillsSection() {
               data-skill-tile={skill}
               initial={reduced ? false : { opacity: 0, y: spacingToken('--spacing-8') }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.15 }}
+              viewport={{ once: false, amount: 0.15 }}
               transition={{ ...revealSpring, delay: reduced ? 0 : (index % 4) * durationToken(document.documentElement, '--duration-fast-min', 0.13) }}
               whileHover={reduced ? undefined : { scale: 1.06, rotate: index % 2 ? 4 : -4, transition: noteSpring }}
             >

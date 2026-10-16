@@ -37,8 +37,8 @@ export function SocialLinks({ compact = false }: { compact?: boolean }) {
       <HStack as="nav" aria-label="Social profiles" gap={compact ? 2 : 4} wrap="wrap" hAlign="start">
         {profiles.map(profile => (
           <MotionVStack key={profile.label} whileHover={reduced ? undefined : { y: -spacingToken('--spacing-1'), rotate: -8, scale: 1.08 }} whileTap={reduced ? undefined : { scale: 0.96 }} transition={noteSpring}>
-            <IconButton label={profile.label} tooltip={profile.label} icon={
-              <VStack gap={0} className="relative w-6 h-6" aria-hidden="true">
+            <IconButton label={profile.label} tooltip={profile.label} size="lg" icon={
+              <VStack gap={0} className="relative w-5 h-5 shrink-0" aria-hidden="true">
                 <Icon icon={profile.icon} size="md" color="inherit" className="absolute inset-0 transition-[opacity,transform] duration-(--duration-medium-min) ease-out group-hover:opacity-0 group-hover:scale-25 group-focus-visible:opacity-0 group-focus-visible:scale-25 motion-reduce:transition-none" />
                 <Icon icon={ArrowIcon} size="md" color="inherit" className="absolute inset-0 opacity-0 scale-25 transition-[opacity,transform] duration-(--duration-medium-min) ease-out group-hover:opacity-100 group-hover:scale-100 group-focus-visible:opacity-100 group-focus-visible:scale-100 motion-reduce:transition-none" />
               </VStack>
