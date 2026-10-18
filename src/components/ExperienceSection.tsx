@@ -4,9 +4,11 @@ import { Text } from '@astryxdesign/core/Text'
 import { List, ListItem } from '@astryxdesign/core/List'
 
 const contributions = [
-  'Building agentic candidate screening on WhatsApp.',
-  'Recording interviews with Recall.ai for recruiter review.',
-  'Turning resumes and screening responses into candidate summaries to support shortlisting.',
+  'Built WhatsApp candidate screening with adaptive follow-ups.',
+  'Building interview recording and review with Recall.ai.',
+  'Contributed to resume intake, profile prefilling, and candidate summaries.',
+  'Modernized the frontend and backend with reusable UI and modular TypeScript architecture.',
+  'Set up Sentry, Langfuse, and PostHog for error tracking, AI evaluation, and product insights.',
 ]
 
 export function ExperienceSection() {

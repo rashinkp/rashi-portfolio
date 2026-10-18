@@ -41,7 +41,7 @@ export function SkillsSection() {
               <VStack gap={1} hAlign="center" vAlign="center" height="100%">
                 {logo ? (
                   <img
-                    src={`/skills/${logo.file}.svg`}
+                    src={`/skills/${logo.file}.${logo.extension ?? 'svg'}`}
                     alt=""
                     loading="lazy"
                     decoding="async"

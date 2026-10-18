@@ -18,7 +18,7 @@ export function useSmoothAnchors() {
       if (!target) return
       event.preventDefault()
       cancel()
-      // Content scrolls in its own viewport above the dock.
+      // Content scrolls in a full-height viewport behind the floating dock.
       const scroller = document.querySelector<HTMLElement>('[data-portfolio-scroll="true"]')
       const current = scroller ? scroller.scrollTop : scrollY
       const origin = scroller ? scroller.getBoundingClientRect().top : 0

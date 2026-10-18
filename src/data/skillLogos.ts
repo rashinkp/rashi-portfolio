@@ -1,5 +1,5 @@
-// Local SVGs from Devicon; Gemini from Simple Icons. See public/skills/SOURCES.md.
-export const skillLogos: Record<string, { file: string; monochrome?: boolean }> = {
+// Local brand assets; see public/skills/SOURCES.md.
+export const skillLogos: Record<string, { file: string; extension?: 'png'; monochrome?: boolean }> = {
   Codex: { file: 'openai', monochrome: true },
   Cursor: { file: 'cursor', monochrome: true },
   Claude: { file: 'claude', monochrome: true },
@@ -7,6 +7,11 @@ export const skillLogos: Record<string, { file: string; monochrome?: boolean }> 
   Railway: { file: 'railway', monochrome: true },
   Vercel: { file: 'vercel', monochrome: true },
   Gemini: { file: 'gemini', monochrome: true },
+  Langfuse: { file: 'langfuse', extension: 'png' },
+  'Recall.ai': { file: 'recall', extension: 'png' },
+  WhatsApp: { file: 'whatsapp', monochrome: true },
+  Sentry: { file: 'sentry', monochrome: true },
+  PostHog: { file: 'posthog', monochrome: true },
   React: { file: 'react' },
   'Next.js': { file: 'nextjs', monochrome: true },
   TypeScript: { file: 'typescript' },

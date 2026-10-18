@@ -1,7 +1,9 @@
 export const skillGroups = [
   { title: 'Think & create', skills: ['Codex', 'Cursor', 'Claude', 'Figma'] },
-  { title: 'Build & connect', skills: ['TypeScript', 'PostgreSQL', 'MySQL', 'Gemini'] },
-  { title: 'Verify & ship', skills: ['Playwright', 'Railway', 'Docker', 'GitHub Actions'] },
+  { title: 'AI & integrations', skills: ['Gemini', 'Langfuse', 'Recall.ai', 'WhatsApp'] },
+  { title: 'Build & connect', skills: ['TypeScript', 'PostgreSQL', 'MySQL', 'Git'] },
+  { title: 'Observe & verify', skills: ['Sentry', 'PostHog', 'Vitest', 'Playwright'] },
+  { title: 'Ship & maintain', skills: ['Railway', 'Vercel', 'Docker', 'GitHub Actions'] },
 ]
 
 export const featuredProjects = [

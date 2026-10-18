@@ -1,8 +1,15 @@
 import { useLayoutEffect } from 'react'
 
-// React renders anchor targets after the browser's first fragment lookup.
+// Fresh shared links can target a section; reloads start a new visit at the top.
 export function useInitialAnchor() {
   useLayoutEffect(() => {
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
+    const reloaded = navigation?.type === 'reload'
+    const previousRestoration = history.scrollRestoration
+    if (reloaded) {
+      history.scrollRestoration = 'manual'
+      history.replaceState(history.state, '', location.pathname + location.search)
+    }
     const restore = () => {
       if (!window.location.hash) return
       try {
@@ -12,9 +19,15 @@ export function useInitialAnchor() {
         // Ignore malformed fragment URLs.
       }
     }
-    const frame = requestAnimationFrame(restore)
+    const initialize = () => {
+      if (!reloaded) { restore(); return }
+      document.querySelector('[data-portfolio-scroll]')?.scrollTo({ top: 0, behavior: 'instant' })
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+    initialize()
+    const frame = requestAnimationFrame(initialize)
     const onPageShow = (event: PageTransitionEvent) => {
-      if (!event.persisted) restore()
+      if (!event.persisted) initialize()
     }
     window.addEventListener('pageshow', onPageShow)
     window.addEventListener('hashchange', restore)
@@ -22,6 +35,7 @@ export function useInitialAnchor() {
       cancelAnimationFrame(frame)
       window.removeEventListener('pageshow', onPageShow)
       window.removeEventListener('hashchange', restore)
+      history.scrollRestoration = previousRestoration
     }
   }, [])
 }

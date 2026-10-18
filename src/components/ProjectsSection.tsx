@@ -16,7 +16,7 @@ export function ProjectsSection() {
   return (
     <VStack as="section" id="projects" gap={mobile ? 6 : 8} hAlign="center" className="min-w-0 py-8 sm:py-10 md:py-16">
       <SectionTitle>Projects</SectionTitle>
-      <VStack gap={4} width="100%" maxWidth={640}>
+      <VStack gap={4} width="100%" maxWidth={mobile ? 408 : 640} paddingInline={mobile ? 2 : 0}>
         {featuredProjects.map(project => (
           <MotionCard key={project.name} variant="transparent" padding={mobile ? 2 : 3} elevation="none" data-reveal="project" className="min-w-0 rounded-lg! border-(length:--focus-outline-width)! border-secondary/60!" whileHover={reduced ? undefined : { y: -spacingToken('--spacing-1') }} transition={noteSpring}>
             <Grid columns={{ minWidth: 220, max: 2, repeat: 'fit' }} gap={mobile ? 3 : 4} align="center">

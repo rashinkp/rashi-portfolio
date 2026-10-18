@@ -27,7 +27,7 @@ function App() {
         <defs><pattern id="notebook-dots" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="currentColor" /></pattern></defs>
         <rect width="100%" height="100%" fill="url(#notebook-dots)" />
       </svg>
-      <VStack gap={0} width="100%" height="calc(100dvh - var(--spacing-10) - var(--spacing-10) - var(--spacing-4))" data-portfolio-scroll="true" className="overflow-y-auto overscroll-y-contain">
+      <VStack gap={0} width="100%" height="100dvh" data-portfolio-scroll="true" className="overflow-y-auto overscroll-y-contain scroll-pb-28">
       <Layout
         className="relative min-h-svh overflow-x-clip bg-transparent text-primary font-sans antialiased selection:bg-accent-bg selection:text-on-accent"
         height="auto"
@@ -38,7 +38,7 @@ function App() {
         }
         content={
           <LayoutContent isScrollable={false} className="overflow-visible! px-4! md:px-8!">
-            <VStack as="main" id="top" gap={0} className="min-w-0 pb-4">
+            <VStack as="main" id="top" gap={0} className="min-w-0 pb-28">
               <HeroSection />
               <AboutSection />
               <ProjectsSection />

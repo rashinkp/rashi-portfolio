@@ -33,8 +33,8 @@ export function SocialLinks({ compact = false }: { compact?: boolean }) {
   const reduced = useReducedMotion()
   return (
     <VStack gap={compact ? 3 : 4} hAlign={compact ? 'center' : 'start'} data-reveal="social-links">
-      <Heading level={3} className={`${compact ? 'text-xl!' : 'text-2xl!'} text-(--color-text-purple)!`}>Stalk Me Here</Heading>
-      <HStack as="nav" aria-label="Social profiles" gap={compact ? 2 : 4} wrap="wrap" hAlign="start">
+      <Heading level={3} justify={compact ? 'center' : 'start'} className={`${compact ? 'text-xl!' : 'text-2xl!'} text-(--color-text-purple)!`}>Stalk Me Here</Heading>
+      <HStack as="nav" aria-label="Social profiles" gap={compact ? 2 : 4} wrap="wrap" hAlign={compact ? 'center' : 'start'}>
         {profiles.map(profile => (
           <MotionVStack key={profile.label} whileHover={reduced ? undefined : { y: -spacingToken('--spacing-1'), rotate: -8, scale: 1.08 }} whileTap={reduced ? undefined : { scale: 0.96 }} transition={noteSpring}>
             <IconButton label={profile.label} tooltip={profile.label} size="lg" icon={
