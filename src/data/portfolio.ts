@@ -1,10 +1,10 @@
 export const skillGroups = [
-  { title: 'Think & create', skills: ['Codex', 'Cursor', 'Claude', 'Figma'] },
-  { title: 'AI & integrations', skills: ['Gemini', 'Langfuse', 'Recall.ai', 'WhatsApp API'] },
-  { title: 'Payments', skills: ['Razorpay', 'Stripe'] },
-  { title: 'Build & connect', skills: ['TypeScript', 'PostgreSQL', 'MySQL', 'Git'] },
-  { title: 'Observe & verify', skills: ['Sentry', 'PostHog', 'Vitest', 'Playwright'] },
-  { title: 'Ship & maintain', skills: ['Railway', 'Vercel', 'Docker', 'GitHub Actions'] },
+  { title: 'Design & AI tools', skills: ['Codex', 'Cursor', 'Claude', 'Figma'] },
+  { title: 'Frontend', skills: ['JavaScript', 'TypeScript', 'React', 'Next.js'] },
+  { title: 'Backend & data', skills: ['Node.js', 'Express', 'NestJS', 'PostgreSQL', 'MySQL'] },
+  { title: 'AI & integrations', skills: ['Gemini', 'Langfuse', 'Recall.ai', 'WhatsApp API', 'Razorpay', 'Stripe', 'Google APIs', 'Microsoft Calendar'] },
+  { title: 'Testing & insights', skills: ['Sentry', 'PostHog', 'Vitest', 'Playwright'] },
+  { title: 'Deploy & workflow', skills: ['AWS', 'OCI', 'Cloudflare', 'Railway', 'Vercel', 'Docker', 'Git', 'GitHub Actions'] },
 ]
 
 export const featuredProjects = [

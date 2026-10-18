@@ -14,3 +14,9 @@ Brand names and logos belong to their respective owners.
 - Sentry, PostHog, WhatsApp, Razorpay, and Stripe: [Simple Icons](https://github.com/simple-icons/simple-icons/tree/develop/icons), under CC0.
 - Langfuse: official [Langfuse touch icon](https://langfuse.com/apple-touch-icon.png).
 - Recall.ai: official [Recall.ai site icon](https://cdn.prod.website-files.com/620d732b1f1f7b244ac89f0e/620d732c1f1f7ba1edc89f35_Favicon%20256.png).
+- JavaScript and Cloudflare: Devicon original SVGs, under the included MIT license.
+- Google APIs uses the Google mark from Devicon (`google-original.svg`), under the included MIT license.
+- OCI uses the Oracle mark from Devicon (`oracle-original.svg`), under the included MIT license.
+- Microsoft Calendar uses the Microsoft brand mark from Simple Icons v11 (CC0).
+
+AWS and Oracle SVG viewBoxes are trimmed to remove excess whitespace for small tiles.
