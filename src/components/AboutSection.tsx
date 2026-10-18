@@ -25,7 +25,7 @@ export function AboutSection() {
   const bounds = useRef<HTMLElement>(null)
   // Re-measure note constraints after rotation instead of retaining old drag offsets.
   const width = useViewportWidth()
-  const mobile = width > 0 && width < 640
+  const mobile = width > 0 && width < 900
   const portrait = (
     <VStack gap={0} hAlign="center" className="relative shrink-0" data-reveal="about-copy">
       <AboutPortrait compact={mobile} />
@@ -33,11 +33,11 @@ export function AboutSection() {
     </VStack>
   )
   const noteGrid = (
-    <Grid columns={mobile && width >= 360 ? 3 : 2} gap={mobile ? 3 : 0} width="100%" className={mobile ? 'items-start' : 'gap-y-10!'}>
+    <Grid columns={mobile && width >= 360 ? 3 : 2} gap={mobile ? 4 : 0} width="100%" maxWidth={mobile ? 352 : undefined} className={mobile ? 'items-start self-center' : 'gap-y-10!'}>
       {notes.map(note => (
-        <StickyNote key={`${width}-${note.label}`} label={note.label} color={note.color} angle={note.angle} bounds={bounds} enterOnView className={mobile ? `p-1.5! ${note.position ? 'mt-3' : ''}` : `w-32! p-3! ${note.position}`}>
+        <StickyNote key={`${width}-${note.label}`} label={note.label} color={note.color} angle={note.angle} bounds={bounds} enterOnView className={mobile ? `w-full! p-1.5! ${note.position ? 'mt-3' : ''}` : `w-32! p-3! ${note.position}`}>
           <VStack hAlign="center" vAlign="center" height="100%" width="100%">
-            <Text justify="center" weight="bold" className="w-full whitespace-pre! text-sm! sm:text-base! leading-tight!">{note.text}</Text>
+            <Text justify="center" weight="bold" className={`w-full whitespace-pre! text-sm! ${mobile ? '' : 'sm:text-base!'} leading-tight!`}>{note.text}</Text>
           </VStack>
         </StickyNote>
       ))}
@@ -48,7 +48,7 @@ export function AboutSection() {
     return (
       <VStack ref={bounds} as="section" id="about" gap={6} hAlign="center" className="relative min-w-0 py-8">
         <SectionTitle>About</SectionTitle>
-        <VStack gap={6} width="100%" maxWidth={408}>
+        <VStack gap={10} width="100%" maxWidth={408} paddingInline={2}>
           <HStack gap={3} wrap="wrap" hAlign="center" vAlign="center">
             {portrait}
             <SocialLinks compact />

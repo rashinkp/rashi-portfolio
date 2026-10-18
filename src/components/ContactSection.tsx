@@ -28,7 +28,7 @@ export function ContactSection() {
   return (
     <VStack as="section" id="contact" gap={5} hAlign="center" className="min-w-0 py-10 md:py-16">
       <SectionTitle>Let’s talk</SectionTitle>
-      <VStack as="form" aria-label="Contact Rashin" onSubmit={handleSubmit} gap={4} maxWidth={720} data-reveal="contact-form" className="w-full min-w-0 [&_input]:rounded-xl [&_textarea]:rounded-xl">
+      <VStack as="form" aria-label="Contact Rashin" onSubmit={handleSubmit} gap={4} maxWidth={720} data-reveal="contact-form" className="w-full min-w-0 [&_input]:rounded-none [&_textarea]:rounded-xl">
         <Grid columns={2} gap={4} className="grid-cols-1! sm:grid-cols-2!">
           <TextInput label="Your name" placeholder="Your Name" htmlName="name" value={name} onChange={setName} size="lg" className="min-h-12!" isRequired isLabelHidden status={attempted && !name.trim() ? { type: 'error', message: 'Please enter your name.' } : undefined} />
           <TextInput label="Email address" placeholder="Email Address" htmlName="email" type="email" value={email} onChange={setEmail} size="lg" className="min-h-12!" isRequired isLabelHidden status={attempted && !validEmail ? { type: 'error', message: 'Please enter a valid email address.' } : undefined} />

@@ -12,7 +12,7 @@ const strokes = [
   'M161 102L166 90L172 102L183 107L172 112L166 123L161 112L150 107Z',
 ]
 
-export function HeroDoodle({ compact = false }: { compact?: boolean }) {
+export function HeroDoodle({ compact = false, mobile = false }: { compact?: boolean; mobile?: boolean }) {
   const reduced = useReducedMotion()
   const duration = durationToken(document.documentElement, '--duration-slow-max', 1.3) * 1.5
   const stagger = durationToken(document.documentElement, '--duration-fast-min', 0.13) / 2
@@ -30,7 +30,7 @@ export function HeroDoodle({ compact = false }: { compact?: boolean }) {
       strokeWidth="2.5"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={`${compact ? 'w-12 h-12 -top-12' : 'w-16 h-16 -top-16'} absolute left-0 shrink-0 pointer-events-none text-secondary md:left-4 lg:left-16 md:top-1/2 md:-translate-y-1/2 md:w-48 md:h-48`}
+      className={`${compact ? 'w-12 h-12' : 'w-16 h-16'} ${mobile ? `left-1/2 -translate-x-1/2 ${compact ? '-top-20' : '-top-24'}` : 'left-0 -top-16'} absolute shrink-0 pointer-events-none text-secondary md:left-0 md:top-1/2 md:-translate-y-1/2 md:w-24 md:h-24 lg:w-40 lg:h-40 xl:left-16 xl:w-48 xl:h-48`}
     >
       {strokes.map((d, index) => (
         <motion.path
