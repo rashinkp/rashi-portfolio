@@ -1,6 +1,7 @@
 export const skillGroups = [
   { title: 'Think & create', skills: ['Codex', 'Cursor', 'Claude', 'Figma'] },
-  { title: 'AI & integrations', skills: ['Gemini', 'Langfuse', 'Recall.ai', 'WhatsApp'] },
+  { title: 'AI & integrations', skills: ['Gemini', 'Langfuse', 'Recall.ai', 'WhatsApp API'] },
+  { title: 'Payments', skills: ['Razorpay', 'Stripe'] },
   { title: 'Build & connect', skills: ['TypeScript', 'PostgreSQL', 'MySQL', 'Git'] },
   { title: 'Observe & verify', skills: ['Sentry', 'PostHog', 'Vitest', 'Playwright'] },
   { title: 'Ship & maintain', skills: ['Railway', 'Vercel', 'Docker', 'GitHub Actions'] },
