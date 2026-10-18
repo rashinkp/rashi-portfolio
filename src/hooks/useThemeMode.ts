@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 
 export type ThemeMode = 'light' | 'dark'
 
@@ -19,7 +19,7 @@ function getInitialThemeMode(): ThemeMode {
 
 export function useThemeMode() {
   const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode)
-  const handleThemeModeChange = (mode: ThemeMode) => {
+  const handleThemeModeChange = useCallback((mode: ThemeMode) => {
     setThemeMode(mode)
 
     try {
@@ -27,7 +27,7 @@ export function useThemeMode() {
     } catch {
       // The selected mode still works for this session when storage is unavailable.
     }
-  }
+  }, [])
 
   return { themeMode, onThemeModeChange: handleThemeModeChange }
 }

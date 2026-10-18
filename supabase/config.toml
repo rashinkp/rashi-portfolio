@@ -1,0 +1,9 @@
+project_id = "rashin-portfolio"
+
+# Public visitors do not sign in. The handler validates input and enforces budgets.
+[functions.chat]
+verify_jwt = false
+
+# Admin-only: the handler checks a separate INGEST_SECRET before doing any work.
+[functions.ingest]
+verify_jwt = false

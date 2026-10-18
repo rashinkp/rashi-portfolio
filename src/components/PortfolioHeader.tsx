@@ -66,7 +66,7 @@ export function PortfolioDock({ themeMode, onThemeModeChange }: PortfolioHeaderP
   const hover = reduced ? undefined : { y: -spacingToken('--spacing-2'), scale: 1.08 }
 
   return (
-      <MotionHStack as="nav" aria-label="Main navigation" gap={1} padding={2} className="fixed z-50 bottom-4 left-1/2 -translate-x-1/2 max-w-full md:gap-2! md:p-3! rounded-xl bg-surface/95 border border-border shadow-lg backdrop-blur-md" initial={reduced ? false : { opacity: 0, y: spacingToken('--spacing-10') }} animate={{ opacity: 1, y: 0 }} transition={{ ...noteSpring, delay: 0.4 }}>
+      <MotionHStack as="nav" aria-label="Main navigation" gap={1} padding={2} className="relative sm:fixed z-50 bottom-0 sm:bottom-4 translate-x-0 w-auto! sm:gap-2! justify-start! sm:left-1/2 sm:-translate-x-1/2 max-w-full p-1! sm:p-2! md:gap-2! md:p-3! [&_svg]:h-4 [&_svg]:w-4 sm:[&_svg]:h-5 sm:[&_svg]:w-5 rounded-xl bg-surface/95 border border-border shadow-lg backdrop-blur-md" initial={reduced ? false : { opacity: 0, y: spacingToken('--spacing-10') }} animate={{ opacity: 1, y: 0 }} transition={{ ...noteSpring, delay: 0.4 }}>
         {destinations.map(item => (
           <MotionVStack key={item.id} className="relative isolate rounded-lg bg-muted shadow-sm" whileHover={hover} whileTap={reduced ? undefined : { scale: 0.96 }} transition={noteSpring}>
             {active === item.id && (
@@ -79,14 +79,14 @@ export function PortfolioDock({ themeMode, onThemeModeChange }: PortfolioHeaderP
                 className="absolute inset-0 rounded-lg bg-accent-bg pointer-events-none"
               />
             )}
-            <IconButton label={item.label} tooltip={item.label} icon={icon(item.icon)} variant="ghost" size="lg" elevation="none" href={`#${item.id}`} aria-current={active === item.id ? 'location' : undefined} className={`relative z-10 bg-transparent! w-10! md:w-12! min-h-12! min-w-10! md:min-w-12! rounded-lg! transition-colors duration-(--duration-medium-min) ease-out motion-reduce:transition-none ${active === item.id ? 'text-on-accent!' : 'text-primary!'}`} />
+            <IconButton label={item.label} tooltip={item.label} icon={icon(item.icon)} variant="ghost" size="lg" elevation="none" href={`#${item.id}`} aria-current={active === item.id ? 'location' : undefined} className={`relative z-10 bg-transparent! w-8! sm:w-10! md:w-12! h-10! min-h-10! sm:h-12! sm:min-h-12! min-w-8! sm:min-w-10! md:min-w-12! rounded-lg! transition-colors duration-(--duration-medium-min) ease-out motion-reduce:transition-none ${active === item.id ? 'text-on-accent!' : 'text-primary!'}`} />
           </MotionVStack>
         ))}
         <MotionVStack whileHover={hover} whileTap={reduced ? undefined : { scale: 0.96 }} transition={noteSpring}>
-          <IconButton label="Download résumé" tooltip="Download résumé" icon={icon('resume')} variant="secondary" size="lg" elevation="low" href="/resume_rashin.pdf" target="_blank" rel="noopener noreferrer" className="w-10! md:w-12! min-h-12! min-w-10! md:min-w-12! rounded-lg!" />
+          <IconButton label="Download résumé" tooltip="Download résumé" icon={icon('resume')} variant="secondary" size="lg" elevation="low" href="/resume_rashin.pdf" target="_blank" rel="noopener noreferrer" className="w-8! sm:w-10! md:w-12! h-10! min-h-10! sm:h-12! sm:min-h-12! min-w-8! sm:min-w-10! md:min-w-12! rounded-lg!" />
         </MotionVStack>
         <MotionVStack whileHover={hover} whileTap={reduced ? undefined : { scale: 0.96 }} transition={noteSpring}>
-          <IconButton label={`Switch to ${nextTheme} theme`} tooltip={`Switch to ${nextTheme} theme`} icon={icon(themeMode === 'dark' ? 'sun' : 'moon')} variant="secondary" size="lg" elevation="low" className="w-10! md:w-12! min-h-12! min-w-10! md:min-w-12! rounded-lg!" onClick={() => onThemeModeChange(nextTheme)} />
+          <IconButton label={`Switch to ${nextTheme} theme`} tooltip={`Switch to ${nextTheme} theme`} icon={icon(themeMode === 'dark' ? 'sun' : 'moon')} variant="secondary" size="lg" elevation="low" className="w-8! sm:w-10! md:w-12! h-10! min-h-10! sm:h-12! sm:min-h-12! min-w-8! sm:min-w-10! md:min-w-12! rounded-lg!" onClick={() => onThemeModeChange(nextTheme)} />
         </MotionVStack>
       </MotionHStack>
   )

@@ -10,13 +10,18 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "knowledge:prepare": "node scripts/prepare-knowledge.mjs",
+    "knowledge:ingest": "node --env-file=.env.ingest.local scripts/ingest-knowledge.mjs",
+    "test:chat": "node --test tests/chat.test.mjs"
   },
   "dependencies": {
+    "@ai-sdk/react": "^3.0.312",
     "@astryxdesign/cli": "^0.5.0",
     "@astryxdesign/core": "^0.5.0",
     "@astryxdesign/theme-neutral": "^0.5.0",
     "@stylexjs/stylex": "^0.19.0",
+    "ai": "^6.0.309",
     "motion": "^14.0.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

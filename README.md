@@ -94,3 +94,9 @@ Open Graph and Twitter summary metadata are included in `index.html`. Once the p
 - [GitHub](https://github.com/rashinkp)
 - [LinkedIn](https://www.linkedin.com/in/rashinkp/)
 - [Email](mailto:rashinkp001@gmail.com)
+
+## AI portfolio assistant
+
+The portfolio includes a source-linked résumé chat using ASTRYX chat components, the Vercel AI SDK, Supabase pgvector/Edge Functions, and Gemini. It opens in preview mode until connected. Follow [the chat setup guide](docs/CHAT_SETUP.md) to configure secrets, deploy functions, and upload the reviewed knowledge.
+
+Run `npm run knowledge:prepare` to review the content locally and `npm run test:chat` to check request validation and chunking. Knowledge scripts require Node.js 22.18 or later.

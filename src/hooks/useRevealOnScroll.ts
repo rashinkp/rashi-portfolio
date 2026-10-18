@@ -4,8 +4,9 @@ import { durationToken } from '../lib/motion'
 
 export const revealClassName = 'motion-reduce:transform-none'
 
-export function useRevealOnScroll() {
+export function useRevealOnScroll(routeKey = false) {
   useLayoutEffect(() => {
+    if (routeKey) return
     const preference = matchMedia('(prefers-reduced-motion: reduce)')
     const elements = new Set<HTMLElement>()
     const visible = new Set<HTMLElement>()
@@ -95,10 +96,14 @@ export function useRevealOnScroll() {
         elements.delete(element)
         visible.delete(element)
       })
-      document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(element => {
-        if (elements.has(element)) return
+      // Measure the whole batch before changing styles. Alternating reads
+      // and writes here forced a new layout for each card on page restoration.
+      const pending = [...(root ?? document).querySelectorAll<HTMLElement>('[data-reveal]')]
+        .filter(element => !elements.has(element))
+        .map(element => ({ element, shown: preference.matches || inViewport(element) }))
+      pending.forEach(({ element, shown }) => {
         elements.add(element)
-        if (preference.matches || inViewport(element)) {
+        if (shown) {
           visible.add(element)
           finish(element)
         } else stage(element)
@@ -108,7 +113,7 @@ export function useRevealOnScroll() {
     registerElements()
     // About swaps its layout at mobile breakpoints; observe replacement nodes too.
     const mutations = new MutationObserver(registerElements)
-    mutations.observe(document.querySelector('main') ?? document.body, { childList: true, subtree: true })
+    mutations.observe(root?.querySelector('main') ?? document.body, { childList: true, subtree: true })
     const onPreference = () => {
       elements.forEach(element => {
         if (preference.matches || element.contains(document.activeElement) || inViewport(element)) {
@@ -135,5 +140,5 @@ export function useRevealOnScroll() {
       preference.removeEventListener('change', onPreference)
       document.removeEventListener('focusin', onFocus)
     }
-  }, [])
+  }, [routeKey])
 }

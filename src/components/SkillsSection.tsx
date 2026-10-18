@@ -39,7 +39,7 @@ export function SkillsSection() {
                     variant="transparent"
                     padding={0.5}
                     elevation="none"
-                    className="group cursor-pointer aspect-5/4 min-h-16 min-w-0 rounded-lg! border-(length:--focus-outline-width)! border-primary! transition-colors duration-(--duration-medium-min) ease-out hover:bg-inverted! motion-reduce:transition-none"
+                    className="group cursor-pointer w-full! max-w-full! aspect-5/4 min-h-16 min-w-0 rounded-lg! border-(length:--focus-outline-width)! border-primary! transition-colors duration-(--duration-medium-min) ease-out hover:bg-inverted! motion-reduce:transition-none"
                     data-skill-tile={skill}
                     initial={reduced ? false : { opacity: 0, y: spacingToken('--spacing-8') }}
                     whileInView={{ opacity: 1, y: 0 }}

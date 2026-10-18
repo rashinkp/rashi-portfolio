@@ -1,0 +1,56 @@
+[
+  {
+    "id": "profile",
+    "title": "Rashin K P: professional profile",
+    "url": "/#about",
+    "content": "Rashin K P is a full-stack developer based in Kerala, India. His résumé describes him as self-taught, with hands-on experience building web applications from frontend to backend. His portfolio focuses on product ownership, thoughtful user experiences, and continuous learning. Core technologies include JavaScript, TypeScript, React, Next.js, Node.js, and MongoDB. The résumé also covers RESTful API design, authentication, real-time systems, clean architecture, and cloud deployment. No exact total years of experience or availability for new roles is confirmed."
+  },
+  {
+    "id": "offrolls",
+    "title": "Offrolls: full-stack development experience",
+    "url": "/#experience",
+    "content": "The current portfolio lists Rashin as a Full-stack Developer at Offrolls from January 2026 to Present. He built WhatsApp candidate screening with adaptive follow-ups. Interview recording and review with Recall.ai is described as work in progress. He contributed to résumé intake, profile prefilling, and candidate summaries. He modernized the frontend and backend with reusable UI and modular TypeScript architecture. He set up Sentry, Langfuse, and PostHog for error tracking, AI evaluation, and product insights. The portfolio does not publish quantified business results or confidential implementation details."
+  },
+  {
+    "id": "resume-frontend",
+    "title": "Résumé: frontend and backend skills",
+    "url": "/resume_rashin.pdf",
+    "content": "The résumé lists JavaScript and TypeScript; React, Next.js, Tailwind CSS, Bootstrap, Zustand, and Redux Toolkit for frontend; Node.js, Express.js, NestJS, REST APIs, JWT, and Multer for backend. Listed databases and storage include MongoDB, SQL, Cloudinary, and AWS S3. Database concepts include indexing, aggregation pipelines, transactions, and schema design. These are listed skills, not a claim of equal depth or professional experience in every tool."
+  },
+  {
+    "id": "resume-engineering",
+    "title": "Résumé: architecture, integrations, and deployment",
+    "url": "/resume_rashin.pdf",
+    "content": "The résumé lists RESTful design, RBAC, access and refresh tokens, webhooks, Socket.IO, Razorpay, Stripe, Google OAuth, and Facebook OAuth. Cloud and workflow tools include AWS EC2, NGINX, Docker, GitHub Actions, Render, and Vercel. Testing tools include Jest and Postman. Concepts include pagination, rate limiting, caching basics, clean architecture, the repository pattern, MVC, SOLID, OOP, data structures, and end-to-end system design. These are résumé-listed skills and concepts; do not imply independent professional projects for each."
+  },
+  {
+    "id": "byway-details",
+    "title": "ByWay: implementation details from the résumé",
+    "url": "/#projects",
+    "content": "ByWay is a multi-role learning platform for students to purchase courses, learn through interactive content, apply as tutors, and earn completion certificates. Rashin built it with Next.js and TypeScript and a clean modular architecture. Features include role-based access, tutor onboarding, Google and Facebook OAuth, Stripe payments with webhook-based validation, and Socket.IO chat and notifications. The résumé describes Dockerized services and CI/CD pipelines. No usage, revenue, or performance metrics are provided."
+  },
+  {
+    "id": "mobilify-details",
+    "title": "Mobilify: implementation details from the résumé",
+    "url": "/#projects",
+    "content": "Mobilify is an e-commerce platform with secure checkout, wallets, inventory, and order workflows. Its React frontend uses Redux Toolkit and RTK Query. The backend uses Node.js, Express, and MongoDB with MVC architecture. Razorpay supports payments, refunds, and wallet transactions. The résumé describes real-time stock and order updates and deployment on AWS. No sales, user counts, or benchmark metrics are provided."
+  },
+  {
+    "id": "mini-project-details",
+    "title": "Additional projects: implementation details",
+    "url": "/#projects",
+    "content": "LinkUp is a one-to-one real-time chat application using React, Express, MongoDB, and Socket.IO, with online status updates, dynamic theming, and event-driven behavior. The Wholesale Delivery Management System uses NestJS, REST APIs, and MongoDB/Mongoose, with JWT authentication, Admin and Truck Driver roles, validation, password hashing, and CRUD workflows for vendors, inventory, and delivery orders. Aadhaar OCR validates document images and extracts details using Node.js, Express, Tesseract OCR, and MongoDB. The Student Management System uses Express, HBS, MongoDB, Google OAuth, and MVC for records and attendance."
+  },
+  {
+    "id": "education",
+    "title": "Education and training",
+    "url": "/resume_rashin.pdf",
+    "content": "Rashin completed a Bachelor of Computer Applications (BCA) at the University of Calicut, Kerala, during 2021–2024. The current portfolio lists MERN Stack training at Brocamp (Brototype), 2024–2025. The older résumé labels that training as 2024–Present; use the portfolio's 2024–2025 dates and acknowledge the difference if asked. Do not invent academic grades or additional qualifications."
+  },
+  {
+    "id": "contact",
+    "title": "Professional contact and availability",
+    "url": "/#contact",
+    "content": "Visitors can contact Rashin at rashinkp001@gmail.com. His GitHub username is rashinkp and his LinkedIn profile is linkedin.com/in/rashinkp/. A downloadable public résumé is available on the portfolio. Availability for jobs or freelance projects, notice period, salary expectations, work authorization, and preferred working hours are not confirmed. Suggest contacting Rashin directly for those questions. The portfolio contact form opens the visitor's email app with a prepared draft."
+  }
+]
