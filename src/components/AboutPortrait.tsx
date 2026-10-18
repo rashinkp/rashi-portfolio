@@ -38,7 +38,8 @@ export function AboutPortrait({ compact = false }: { compact?: boolean }) {
         </motion.g>
       </g>
       <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m69 39-9-13m22 6 3-16M65 53l-15-5M67 211q-38-3-20-37 3-12 17-21m-16 4 16-4-6 15" />
+        <path d="m69 39-9-13m22 6 3-16M65 53l-15-5" />
+        <path d={`M${compact ? 35 : 55} 211C4 208 17 161 70 126m-16 3 16-3-5 17`} />
       </g>
     </svg>
   )

@@ -34,7 +34,7 @@ export function HeroSection() {
           <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" weight="bold" className="text-lg! md:text-xl!">Drag me 😆</Text></VStack>
         </StickyNote>
         <StickyNote key={`scale-${width}-${compact}`} label="Product craft" color="cyan" angle={-3} bounds={bounds} className="aspect-4/3! p-2! md:p-4! md:absolute md:right-0 md:bottom-56 md:w-48!">
-          <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" weight="bold" className={`${compact ? 'text-sm! leading-tight!' : 'text-base!'} md:text-xl!`}>Big ideas.<br />Fewer clicks.<br />Happy humans.</Text></VStack>
+          <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" weight="bold" textWrap="nowrap" className={`${compact ? 'text-sm!' : 'text-base!'} md:text-lg! leading-tight!`}>Big ideas.<br />Fewer clicks.<br />Happy humans.</Text></VStack>
         </StickyNote>
         <StickyNote key={`bca-${width}-${compact}`} label="BCA graduate" color="yellow" angle={4} bounds={bounds} className={`aspect-4/3! ${compact ? 'mt-0' : 'mt-4'} p-2! md:p-4! md:mt-0 md:absolute md:left-8 md:bottom-36 md:w-48!`}>
           <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" weight="bold" className={`${compact ? 'text-sm!' : 'text-base!'} md:text-xl!`}>BCA graduate</Text><Text justify="center" className={`${compact ? 'text-xs! leading-tight!' : 'text-sm!'} md:text-base!`}>University of Calicut</Text></VStack>
