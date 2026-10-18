@@ -10,6 +10,7 @@ import { useInitialAnchor } from './hooks/useInitialAnchor'
 import { PortfolioHeader, PortfolioDock } from './components/PortfolioHeader'
 import { HeroSection } from './components/HeroSection'
 import { AboutSection } from './components/AboutSection'
+import { ExperienceSection } from './components/ExperienceSection'
 import { ProjectsSection } from './components/ProjectsSection'
 import { ContactSection } from './components/ContactSection'
 import { PortfolioFooter } from './components/PortfolioFooter'
@@ -41,6 +42,7 @@ function App() {
             <VStack as="main" id="top" gap={0} className="min-w-0 pb-28">
               <HeroSection />
               <AboutSection />
+              <ExperienceSection />
               <ProjectsSection />
               <ContactSection />
               <PortfolioFooter />

@@ -4,7 +4,6 @@ import { Grid } from '@astryxdesign/core/Grid'
 import { Heading } from '@astryxdesign/core/Heading'
 import { Text } from '@astryxdesign/core/Text'
 import { SectionTitle } from './SectionTitle'
-import { ExperienceSection } from './ExperienceSection'
 import { SocialLinks } from './SocialLinks'
 import { SkillsSection } from './SkillsSection'
 import { StickyNote } from './StickyNote'
@@ -55,7 +54,6 @@ export function AboutSection() {
           </HStack>
           <SkillsSection />
           {noteGrid}
-          <ExperienceSection />
         </VStack>
       </VStack>
     )
@@ -71,7 +69,6 @@ export function AboutSection() {
         <VStack gap={mobile ? 6 : 10} width={mobile ? 320 : 480} maxWidth="100%" hAlign="start" className="min-w-0 shrink-0">
           <SocialLinks />
           <SkillsSection />
-          <ExperienceSection />
         </VStack>
       </HStack>
     </VStack>
