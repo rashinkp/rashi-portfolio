@@ -1,5 +1,17 @@
 export interface ChatTurn { role: 'user' | 'assistant'; content: string }
 
+export function recentChatHistory<T extends { role: string; content: string }>(turns: T[]): T[] {
+  const recent: T[] = []
+  let characters = 0
+  for (const turn of turns.slice(-20).reverse()) {
+    if (characters + turn.content.length > 12000) break
+    recent.unshift(turn)
+    characters += turn.content.length
+  }
+  while (recent[0]?.role === 'assistant') recent.shift()
+  return recent
+}
+
 // Discard client-supplied metadata, source parts, tools, and system instructions.
 export function parseChatInput(body: unknown): ChatTurn[] {
   if (!body || typeof body !== 'object' || !('messages' in body) || !Array.isArray(body.messages)) {
@@ -21,6 +33,7 @@ export function parseChatInput(body: unknown): ChatTurn[] {
     turns.push({ role: message.role, content })
   }
   if (turns.at(-1)?.role !== 'user') throw new Error('Expected a question.')
-  // Only the recent context is sent to Gemini, regardless of the displayed history.
-  return turns.slice(-6)
+  // Keep up to ten exchanges, with a character budget to bound model cost.
+  // Preserve whole turns rather than truncating a question or answer mid-sentence.
+  return recentChatHistory(turns)
 }

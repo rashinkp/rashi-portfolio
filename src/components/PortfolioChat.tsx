@@ -16,6 +16,7 @@ import { ChatSources } from './ChatSources'
 import { ChatScrollButton } from './ChatScrollButton'
 import { ChatReplyLink } from './ChatReplyLink'
 import { chatProfileLinks } from './chat-link-plugins'
+import { recentChatHistory } from '../../supabase/functions/_shared/chat-input'
 
 const projectUrl = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '')
 const publicKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
@@ -50,11 +51,15 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
     api: `${projectUrl ?? ''}/functions/v1/chat`,
     headers: publicKey ? { apikey: publicKey } : {},
     // Send only recent text. Source metadata and other UI parts never become prompts.
-    prepareSendMessagesRequest: ({ messages }) => ({
-      body: { messages: messages.slice(-12).map(({ id, role, parts }) => ({
-        id, role, parts: parts.filter(part => part.type === 'text'),
-      })).filter(message => message.parts.some(part => part.type === 'text' && part.text.trim())) },
-    }),
+    prepareSendMessagesRequest: ({ messages }) => {
+      const recent = recentChatHistory(messages.map(({ id, role, parts }) => ({
+        id, role, content: parts.filter(part => part.type === 'text').map(part => part.text).join('\n').trim(),
+      })).filter(message => message.content))
+      const payload = { messages: recent.map(({ id, role, content }) => ({ id, role, parts: [{ type: 'text', text: content }] })) }
+      // Keep room for JSON overhead and verification even with multibyte text.
+      while (payload.messages.length > 1 && new TextEncoder().encode(JSON.stringify(payload)).length > 35000) payload.messages.shift()
+      return { body: payload }
+    },
     fetch: verifiedFetch,
   }), [verifiedFetch])
   const { messages, sendMessage, status, error, clearError, stop, setMessages, regenerate } = useChat({ transport })

@@ -2,6 +2,8 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { parseChatInput } from '../supabase/functions/_shared/chat-input.ts'
 import { buildKnowledge, chunkContent } from '../scripts/knowledge.mjs'
+import { buildRetrievalQuery, combineChatDocuments } from '../supabase/functions/_shared/chat-context.ts'
+import { featuredProjects, additionalProjects } from '../src/data/portfolio.ts'
 const turn = (role, text) => ({ role, parts: [{ type: 'text', text }] })
 
 test('only text from user and assistant messages enters the prompt', () => {
@@ -14,10 +16,51 @@ test('malformed, empty, oversized, and non-question requests are rejected', () =
 })
 
 test('recent history stays bounded', () => {
-  const messages = Array.from({ length: 15 }, (_, index) => turn(index % 2 ? 'assistant' : 'user', `Message ${index}`))
+  const messages = Array.from({ length: 25 }, (_, index) => turn(index % 2 ? 'assistant' : 'user', `Message ${index}`))
   const parsed = parseChatInput({ messages })
-  assert.equal(parsed.length, 6)
-  assert.equal(parsed.at(-1).content, 'Message 14')
+  assert.equal(parsed.length, 19)
+  assert.equal(parsed[0].role, 'user')
+  assert.equal(parsed.at(-1).content, 'Message 24')
+  const large = parseChatInput({ messages: [turn('user', 'ByWay?'), turn('assistant', 'x'.repeat(6000)), turn('user', 'Mobilify?'), turn('assistant', 'y'.repeat(6000)), turn('user', 'What about its payments?')] })
+  assert.ok(large.reduce((size, message) => size + message.content.length, 0) <= 12000)
+  assert.equal(large.at(-1).content, 'What about its payments?')
+})
+
+test('every published project survives a narrow or empty semantic search', async () => {
+  const { documents } = await buildKnowledge()
+  const catalog = documents.filter(doc => /^(?:project-|additional-project-)/.test(doc.id))
+  const bywayOnly = documents.filter(doc => doc.id.startsWith('byway-details'))
+  for (const matches of [[], bywayOnly, [catalog[0], ...bywayOnly]]) {
+    const combined = combineChatDocuments(catalog, matches)
+    for (const project of [...featuredProjects, ...additionalProjects]) {
+      assert.ok(combined.some(doc => doc.content.includes(project.name)), `Missing ${project.name}`)
+    }
+    assert.equal(new Set(combined.map(doc => doc.id)).size, combined.length)
+  }
+})
+
+test('follow-up retrieval retains the subject while explicit project switches reset it', () => {
+  const catalog = [{ title: 'ByWay: portfolio project' }, { title: 'Mobilify: portfolio project' }]
+  const history = [
+    { role: 'user', content: 'Tell me about ByWay' },
+    { role: 'assistant', content: 'ByWay uses Next.js, Stripe and Socket.IO.' },
+  ]
+  const followUp = buildRetrievalQuery([...history, { role: 'user', content: 'What payments does it support?' }], catalog)
+  assert.ok(followUp.includes('ByWay'))
+  assert.ok(followUp.includes('What payments does it support?'))
+  assert.equal(buildRetrievalQuery([...history, { role: 'user', content: 'What about Mobilify?' }], catalog), 'What about Mobilify?')
+  assert.equal(buildRetrievalQuery([...history, { role: 'user', content: 'How can I contact Rashin?' }], catalog), 'How can I contact Rashin?')
+})
+
+test('a project discussion stays available beyond the previous six-message window', () => {
+  const messages = [turn('user', 'Tell me about ByWay'), turn('assistant', 'ByWay is a learning platform.')]
+  for (const project of ['Mobilify', 'LinkUp', 'Aadhaar OCR', 'Delivery Management']) {
+    messages.push(turn('user', `Tell me about ${project}`), turn('assistant', `${project} is in the portfolio.`))
+  }
+  messages.push(turn('user', 'Now list all of them once more'))
+  const parsed = parseChatInput({ messages })
+  assert.equal(parsed[0].content, 'Tell me about ByWay')
+  assert.equal(parsed.at(-1).content, 'Now list all of them once more')
 })
 
 test('chunking preserves every word and enforces embedding limits', () => {

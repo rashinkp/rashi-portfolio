@@ -7,6 +7,10 @@ Deno.test('chat rejects abuse before database or model work', async t => {
   let verifications = 0
   let databaseCalls = 0
   let modelInitializations = 0
+  let generatedPrompt = ''
+  let inventoryReads = 0
+  const projects = ['ByWay', 'Mobilify', 'LinkUp', 'Delivery Management', 'Aadhaar OCR', 'Student Management']
+  const catalog = projects.map((name, i) => ({ id: i < 2 ? `project-${name.toLowerCase()}-1` : `additional-project-${i - 1}-1`, title: `${name}: portfolio project`, url: '/#projects', content: `${name}: published project.` }))
   const assert = (condition: boolean, message: string) => { if (!condition) throw new Error(message) }
   const environment = {
     ALLOWED_ORIGINS: 'https://portfolio.example', TURNSTILE_SECRET_KEY: 'private-test-placeholder',
@@ -18,16 +22,22 @@ Deno.test('chat rejects abuse before database or model work', async t => {
   Object.defineProperty(Deno, 'serve', { value: (callback: typeof handler) => { handler = callback } })
   Object.assign(globalThis, { Supabase: { ai: { Session: class {
     constructor() { modelInitializations++ }
-    run() { throw new Error('Embedding must not run') }
+    run() { if (mode !== 'allowed') throw new Error('Embedding must not run'); return new Float32Array(384).fill(0.1) }
   } } } })
-  globalThis.fetch = async input => {
+  globalThis.fetch = async (input, init) => {
     const url = String(input)
     if (url === 'https://challenges.cloudflare.com/turnstile/v0/siteverify') {
       verifications++
       if (mode === 'offline') throw new Error('Offline')
-      return Response.json({ success: mode === 'budget-denied', hostname: 'portfolio.example', action: 'portfolio_chat', challenge_ts: new Date().toISOString(), 'error-codes': ['timeout-or-duplicate'] })
+      return Response.json({ success: mode === 'budget-denied' || mode === 'allowed', hostname: 'portfolio.example', action: 'portfolio_chat', challenge_ts: new Date().toISOString(), 'error-codes': ['timeout-or-duplicate'] })
     }
-    if (url.includes('/rest/v1/rpc/consume_verified_portfolio_chat_budget')) { databaseCalls++; return Response.json(false) }
+    if (url.includes('/rest/v1/rpc/consume_verified_portfolio_chat_budget')) { databaseCalls++; return Response.json(mode === 'allowed') }
+    if (mode === 'allowed' && url.includes('/rest/v1/portfolio_documents?')) { inventoryReads++; return Response.json(catalog) }
+    if (mode === 'allowed' && url.includes('/rest/v1/rpc/match_portfolio_documents')) return Response.json([{ id: 'byway-details-1', title: 'ByWay details', url: '/#projects', content: 'ByWay uses Stripe.', similarity: 0.8 }])
+    if (mode === 'allowed' && url.includes('generativelanguage.googleapis.com')) {
+      generatedPrompt = String(init?.body)
+      return new Response(`data: ${JSON.stringify({ candidates: [{ content: { role: 'model', parts: [{ text: 'Test reply.' }] }, finishReason: 'STOP' }] })}\n\n`, { headers: { 'Content-Type': 'text/event-stream' } })
+    }
     throw new Error(`Unexpected outbound call: ${url}`)
   }
   try {
@@ -57,6 +67,18 @@ Deno.test('chat rejects abuse before database or model work', async t => {
       assert(response.status === 429, 'Expected budget rejection')
       assert(databaseCalls === 1 && response.headers.get('Retry-After') === '60', 'Missing database check or retry guidance')
       assert(modelInitializations === 0, 'Rejected traffic initialized the embedding model')
+    })
+    await t.step('a narrow search still sends all published projects to the model and citations', async () => {
+      mode = 'allowed'
+      const response = await handler(request('fresh-catalog-token'))
+      const stream = await response.text()
+      assert(response.status === 200 && inventoryReads === 1, 'Missing project inventory query')
+      for (const name of projects) {
+        assert(generatedPrompt.includes(name), `Model is missing ${name}`)
+        assert(stream.includes(name), `Sources are missing ${name}`)
+      }
+      assert(generatedPrompt.includes('list every project in that inventory'), 'Missing completeness instruction')
+      assert(stream.includes('Test reply.'), 'Model stream was not forwarded')
     })
   } finally {
     Object.defineProperty(Deno, 'serve', { value: originalServe })
