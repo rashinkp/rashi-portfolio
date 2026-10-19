@@ -66,7 +66,7 @@ export function PortfolioDock({ themeMode, onThemeModeChange }: PortfolioHeaderP
   const hover = reduced ? undefined : { y: -spacingToken('--spacing-2'), scale: 1.08 }
 
   return (
-      <MotionHStack as="nav" aria-label="Main navigation" gap={1} padding={2} className="relative sm:fixed z-50 bottom-0 sm:bottom-4 translate-x-0 w-auto! sm:gap-2! justify-start! sm:left-1/2 sm:-translate-x-1/2 max-w-full p-1! sm:p-2! md:gap-2! md:p-3! [&_svg]:h-4 [&_svg]:w-4 sm:[&_svg]:h-5 sm:[&_svg]:w-5 rounded-xl bg-surface/95 border border-border shadow-lg backdrop-blur-md" initial={reduced ? false : { opacity: 0, y: spacingToken('--spacing-10') }} animate={{ opacity: 1, y: 0 }} transition={{ ...noteSpring, delay: 0.4 }}>
+      <MotionHStack as="nav" aria-label="Main navigation" gap={1} padding={2} className="relative sm:fixed z-50 bottom-0 sm:bottom-4 translate-x-0 w-auto! sm:gap-2! justify-start! sm:left-1/2 sm:-translate-x-1/2 max-w-full p-1! sm:p-2! md:gap-2! md:p-3! [&_svg]:h-4 [&_svg]:w-4 sm:[&_svg]:h-5 sm:[&_svg]:w-5 rounded-xl bg-surface/95 border border-border shadow-lg backdrop-blur-md" initial={false} animate={{ opacity: 1, y: 0 }} transition={{ ...noteSpring, delay: 0.4 }}>
         {destinations.map(item => (
           <MotionVStack key={item.id} className="relative isolate rounded-lg bg-muted shadow-sm" whileHover={hover} whileTap={reduced ? undefined : { scale: 0.96 }} transition={noteSpring}>
             {active === item.id && (

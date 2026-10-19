@@ -1,8 +1,20 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useSyncExternalStore } from 'react'
 
 export type ThemeMode = 'light' | 'dark'
 
 const themeStorageKey = 'rashin-portfolio-theme'
+
+function subscribe(onChange: () => void) {
+  const preference = window.matchMedia('(prefers-color-scheme: dark)')
+  preference.addEventListener('change', onChange)
+  window.addEventListener('storage', onChange)
+  return () => {
+    preference.removeEventListener('change', onChange)
+    window.removeEventListener('storage', onChange)
+  }
+}
+
+const serverThemeMode = (): ThemeMode => 'light'
 
 function getInitialThemeMode(): ThemeMode {
   try {
@@ -18,7 +30,10 @@ function getInitialThemeMode(): ThemeMode {
 }
 
 export function useThemeMode() {
-  const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode)
+  // Match the static page during hydration, then read browser preferences.
+  const preferredMode = useSyncExternalStore(subscribe, getInitialThemeMode, serverThemeMode)
+  const [selectedMode, setThemeMode] = useState<ThemeMode | null>(null)
+  const themeMode = selectedMode ?? preferredMode
   const handleThemeModeChange = useCallback((mode: ThemeMode) => {
     setThemeMode(mode)
 

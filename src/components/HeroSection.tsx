@@ -34,7 +34,7 @@ export function HeroSection() {
 
   const title = (
     <VStack gap={compact ? 2 : mobile ? 3 : 5} hAlign="center" className={`relative z-10 w-full text-center md:py-24 ${mobile ? 'col-span-2 order-3 py-2' : ''}`}>
-      <Heading level={1} type="display-1" justify="center" className={`${compact ? 'text-2xl!' : 'text-3xl!'} ${mobile ? '' : 'sm:text-4xl! md:text-5xl!'} font-heading!`}>hey, I’m Rashin</Heading>
+      <Heading level={1} type="display-1" justify="center" className={`${compact ? 'text-2xl!' : 'text-3xl!'} ${mobile ? '' : 'sm:text-4xl! md:text-5xl!'} font-heading!`}>hey, I’m Rashin KP</Heading>
       <Text weight="bold" justify="center" className={`${compact ? 'text-sm! leading-tight!' : 'text-base!'} ${mobile ? '' : 'sm:text-xl!'} whitespace-pre-line!`}>{mobile ? 'PRODUCT ENGINEER\nBUILDER · DESIGNER' : 'PRODUCT ENGINEER · BUILDER · DESIGNER'}</Text>
       <HStack gap={2} wrap="wrap" hAlign="center">
         <Button label="Explore my work ↗" variant="primary" size={mobile ? "sm" : "lg"} href="#projects" className={`${mobile ? 'min-h-10! px-3! text-sm!' : 'min-h-12!'} rounded-full!`} />

@@ -18,13 +18,13 @@ const PortfolioChat = memo(lazy(loadChat))
 
 function App() {
   const { themeMode, onThemeModeChange } = useThemeMode()
-  const [isChatPage, setIsChatPage] = useState(() => window.location.pathname.replace(/\/$/, '') === '/chat')
+  const [isChatPage, setIsChatPage] = useState(() => typeof window !== 'undefined' && window.location.pathname.replace(/\/$/, '') === '/chat')
   const [chatPrepared, setChatPrepared] = useState(isChatPage)
   const [portfolioVisited, setPortfolioVisited] = useState(!isChatPage)
   const [journey, setJourney] = useState<Point | null>(null)
   const [returning, setReturning] = useState(false)
   const reducedMotion = useReducedMotion()
-  const [sceneDuration] = useState(() => durationToken(document.documentElement, '--duration-medium-min', 0.31))
+  const [sceneDuration] = useState(() => durationToken(globalThis.document?.documentElement, '--duration-medium-min', 0.31))
   // Warm the lazy chat chunk while the portfolio is idle, before a mobile tap
   // starts the animation (touch screens do not get the hover preload).
   useEffect(() => {

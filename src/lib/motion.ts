@@ -9,13 +9,15 @@ export const MotionCard = motion.create(Card)
 export const noteSpring = { type: 'spring' as const, stiffness: 400, damping: 30, mass: 1 }
 export const revealSpring = { type: 'spring' as const, stiffness: 300, damping: 24, mass: 4 }
 
-export function durationToken(element: Element, name: string, fallback: number) {
+export function durationToken(element: Element | undefined, name: string, fallback: number) {
+  if (!element || typeof getComputedStyle === 'undefined') return fallback
   const value = getComputedStyle(element).getPropertyValue(name).trim()
   const amount = parseFloat(value)
   return Number.isFinite(amount) ? amount / (value.endsWith('ms') ? 1000 : 1) : fallback
 }
 
 export function spacingToken(name: string) {
+  if (typeof document === 'undefined') return 0
   const value = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name))
   return Number.isFinite(value) ? value : 0
 }

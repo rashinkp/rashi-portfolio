@@ -8,9 +8,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
+    "test:prerender": "node --test tests/prerender.test.mjs",
     "knowledge:prepare": "node scripts/prepare-knowledge.mjs",
     "knowledge:ingest": "node --env-file=.env.ingest.local scripts/ingest-knowledge.mjs",
     "test:chat": "node --test tests/chat.test.mjs tests/chat-abuse.test.mjs tests/chat-links.test.mjs",

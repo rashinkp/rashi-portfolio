@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode, type RefObject } from 'react'
 import { useReducedMotion } from 'motion/react'
-import { MotionCard, noteSpring, spacingToken, durationToken } from '../lib/motion'
+import { MotionCard, noteSpring, durationToken } from '../lib/motion'
 
 interface StickyNoteProps {
   children: ReactNode
@@ -49,13 +49,13 @@ export function StickyNote({ children, label, color, className, angle, bounds, e
       }}
       dragElastic={0}
       dragMomentum={false}
-      initial={reduced ? false : { opacity: 0, y: spacingToken('--spacing-10'), rotate: angle * 3 }}
+      initial={false}
       animate={enterOnView ? undefined : { opacity: 1, x: position.x, y: position.y, rotate: reduced ? 0 : angle }}
       whileInView={enterOnView ? { opacity: 1, x: position.x, y: position.y, rotate: reduced ? 0 : angle } : undefined}
       viewport={enterOnView ? { once: true, amount: 0.15 } : undefined}
       transition={reduced ? { duration: 0 } : entered ? noteSpring : {
         type: 'spring', stiffness: 120, damping: 24, mass: 1,
-        delay: durationToken(document.documentElement, '--duration-medium-max', 0.55),
+        delay: durationToken(globalThis.document?.documentElement, '--duration-medium-max', 0.55),
       }}
       onAnimationComplete={() => setEntered(true)}
       whileHover={reduced ? undefined : { scale: 1.08, rotate: angle - 4, transition: noteSpring }}
