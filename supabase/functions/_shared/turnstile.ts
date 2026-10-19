@@ -29,10 +29,15 @@ export async function verifyTurnstile(
     throw new VerificationError(503, 'Security check is unavailable. Please retry shortly.')
   }
   if (!response.ok) throw new VerificationError(503, 'Security check is unavailable. Please retry shortly.')
-  let result: { success?: boolean; hostname?: string; action?: string }
+  let result: { success?: boolean; hostname?: string; action?: string; challenge_ts?: string }
   try { result = await response.json() }
   catch { throw new VerificationError(503, 'Security check is unavailable. Please retry shortly.') }
   if (!result || result.success !== true || result.action !== 'portfolio_chat' || result.hostname !== new URL(origin).hostname) {
+    throw new VerificationError(403, 'Security check expired or failed. Please retry.')
+  }
+  const issuedAt = Date.parse(result.challenge_ts ?? '')
+  const age = Date.now() - issuedAt
+  if (!Number.isFinite(issuedAt) || age > 300000 || age < -30000) {
     throw new VerificationError(403, 'Security check expired or failed. Please retry.')
   }
 }

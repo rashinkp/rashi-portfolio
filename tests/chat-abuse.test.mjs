@@ -32,8 +32,14 @@ test('Turnstile validates a fresh token with a bounded server-to-server request'
     assert.equal(options.method, 'POST')
     assert.deepEqual(JSON.parse(options.body), { secret, response: 'fresh-token' })
     assert.ok(options.signal instanceof AbortSignal)
-    return Response.json({ success: true, hostname: 'portfolio.example', action: 'portfolio_chat' })
+    return Response.json({ success: true, hostname: 'portfolio.example', action: 'portfolio_chat', challenge_ts: new Date().toISOString() })
   })
+})
+
+test('valid-looking verification with missing, expired or future issuance is rejected', async () => {
+  for (const challenge_ts of [undefined, 'invalid', new Date(Date.now() - 301000).toISOString(), new Date(Date.now() + 60000).toISOString()]) {
+    await assert.rejects(verifyTurnstile('token', origin, secret, reply({ success: true, hostname: 'portfolio.example', action: 'portfolio_chat', challenge_ts })), error => error.status === 403)
+  }
 })
 
 test('per-worker verification burst cap resets without accumulating client identities', () => {
@@ -48,10 +54,22 @@ test('SQL limiter enforces shared budgets and bounded bucket allocation', async 
     await db.exec(`create role anon; create role authenticated; create role service_role;
       create table public.portfolio_chat_limits (bucket text primary key, requests integer not null default 0, expires_at timestamptz not null);`)
     await db.exec(await readFile(new URL('../supabase/migrations/20261018120000_chat_abuse_protection.sql', import.meta.url), 'utf8'))
+    await db.exec(await readFile(new URL('../supabase/migrations/20261019090000_chat_token_replay_guard.sql', import.meta.url), 'utf8'))
     const hash = n => n.toString(16).padStart(64, '0')
     const consume = async n => (await db.query('select public.consume_portfolio_chat_budget($1) as allowed', [hash(n)])).rows[0].allowed
     const clear = () => db.exec('truncate public.portfolio_chat_limits')
     const expireCooldown = () => db.exec("update public.portfolio_chat_limits set expires_at = now() - interval '1 second' where bucket like 'ip-cooldown:%'")
+
+    await t.test('a token cannot be replayed from another IP or concurrent request', async () => {
+      const verified = async (client, token) => (await db.query('select public.consume_verified_portfolio_chat_budget($1,$2) as allowed', [hash(client), hash(token)])).rows[0].allowed
+      const results = await Promise.all(Array.from({ length: 10 }, (_, index) => verified(index, 1000)))
+      assert.equal(results.filter(Boolean).length, 1)
+      assert.equal((await db.query("select requests from public.portfolio_chat_limits where bucket like 'global-day:%'")).rows[0].requests, 1)
+      assert.equal(await verified(20, 1001), true)
+      assert.equal(await verified(21, 1000), false)
+      assert.equal((await db.query("select has_function_privilege('anon', 'public.consume_verified_portfolio_chat_budget(text,text)', 'EXECUTE') as allowed")).rows[0].allowed, false)
+      await clear()
+    })
 
     await t.test('five-second cooldown blocks rapid repeats without incrementing budgets', async () => {
       assert.equal(await consume(1), true)

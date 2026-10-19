@@ -25,9 +25,9 @@ Deno.test('chat rejects abuse before database or model work', async t => {
     if (url === 'https://challenges.cloudflare.com/turnstile/v0/siteverify') {
       verifications++
       if (mode === 'offline') throw new Error('Offline')
-      return Response.json({ success: mode === 'budget-denied', hostname: 'portfolio.example', action: 'portfolio_chat', 'error-codes': ['timeout-or-duplicate'] })
+      return Response.json({ success: mode === 'budget-denied', hostname: 'portfolio.example', action: 'portfolio_chat', challenge_ts: new Date().toISOString(), 'error-codes': ['timeout-or-duplicate'] })
     }
-    if (url.includes('/rest/v1/rpc/consume_portfolio_chat_budget')) { databaseCalls++; return Response.json(false) }
+    if (url.includes('/rest/v1/rpc/consume_verified_portfolio_chat_budget')) { databaseCalls++; return Response.json(false) }
     throw new Error(`Unexpected outbound call: ${url}`)
   }
   try {

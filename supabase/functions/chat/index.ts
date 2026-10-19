@@ -30,7 +30,9 @@ Deno.serve(async request => {
     const address = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${requiredEnv('RATE_LIMIT_SALT')}:${address}`))
     const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')
-    const budget = await db.rpc('consume_portfolio_chat_budget', { client_hash: hash })
+    const verificationDigest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token))
+    const verificationHash = Array.from(new Uint8Array(verificationDigest), byte => byte.toString(16).padStart(2, '0')).join('')
+    const budget = await db.rpc('consume_verified_portfolio_chat_budget', { client_hash: hash, verification_hash: verificationHash })
     if (budget.error) throw new Error('Budget check failed')
     if (!budget.data) return Response.json({ error: 'Chat limit reached. Please try again later or email Rashin.' }, { status: 429, headers: { ...headers, 'Retry-After': '60' } })
 
