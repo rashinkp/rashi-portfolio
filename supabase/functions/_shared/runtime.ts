@@ -38,9 +38,15 @@ export async function readJson(request: Request, limit: number): Promise<unknown
   if (!reader) throw new HttpError(400, 'Missing request body.')
   const parts: Uint8Array[] = []
   let size = 0
+  let timedOut = false
+  const deadline = setTimeout(() => {
+    timedOut = true
+    void reader.cancel().catch(() => {})
+  }, 10000)
   try {
     while (true) {
       const { done, value } = await reader.read()
+      if (timedOut) throw new HttpError(408, 'Request took too long. Please retry.')
       if (done) break
       size += value.byteLength
       if (size > limit) {
@@ -49,7 +55,7 @@ export async function readJson(request: Request, limit: number): Promise<unknown
       }
       parts.push(value)
     }
-  } finally { reader.releaseLock() }
+  } finally { clearTimeout(deadline); reader.releaseLock() }
   const bytes = new Uint8Array(size)
   let offset = 0
   for (const part of parts) { bytes.set(part, offset); offset += part.byteLength }
@@ -65,8 +71,10 @@ declare const Supabase: {
 }
 
 // Shared model and settings ensure document and query embeddings are compatible.
-const session = new Supabase.ai.Session('gte-small')
+let session: InstanceType<typeof Supabase.ai.Session> | undefined
 export async function embed(text: string): Promise<number[]> {
+  // Invalid chat tokens and unauthorized ingestion never initialize the model.
+  session ??= new Supabase.ai.Session('gte-small')
   const result = await session.run(text, { mean_pool: true, normalize: true })
   const vector = Array.from(result) as number[]
   if (vector.length !== 384 || vector.some(value => !Number.isFinite(value))) {

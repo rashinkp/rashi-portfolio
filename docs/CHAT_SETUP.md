@@ -22,6 +22,7 @@ Copy `.env.functions.example` to `.env.functions.local` and fill in:
 
 - `GEMINI_API_KEY`: your Google AI Studio API key.
 - `GEMINI_MODEL`: defaults to `gemini-3.5-flash-lite`; choose a currently available model in your account if necessary.
+- `TURNSTILE_SECRET_KEY`: the private secret for a free Cloudflare Turnstile Managed widget. Use real credentials; public test secrets are rejected by the backend.
 - `ALLOWED_ORIGINS`: exact frontend origins, separated by commas, without paths or trailing slashes. Include your production domain and `http://localhost:5173` for local development. If Vite chooses another port, add that exact origin too.
 - `RATE_LIMIT_SALT`: a random private value used to hash client addresses.
 - `INGEST_SECRET`: a different random private value that authorizes knowledge updates.
@@ -36,7 +37,7 @@ npx supabase functions deploy ingest
 
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are supplied automatically by the hosted Supabase Edge Function runtime. Never put the service role key or Gemini key in a `VITE_*` variable.
 
-Both functions disable gateway JWT checks in `supabase/config.toml` because visitors do not sign in and publishable keys are not JWTs. The public chat handler applies validation and database-backed budgets. The ingest handler requires the separate secret before reading the request body or generating embeddings.
+Both functions disable gateway JWT checks in `supabase/config.toml` because visitors do not sign in and publishable keys are not JWTs. The public chat handler requires a server-verified Turnstile token before database access, embeddings, or Gemini. The ingest handler requires the separate secret before reading the request body or generating embeddings.
 
 ## 3. Review and upload the knowledge
 
@@ -58,14 +59,19 @@ The script embeds one chunk per function invocation to stay within the Free plan
 
 ## 4. Connect the frontend
 
+Create a widget at [Cloudflare Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile), choose **Managed**, and allow only your production hostname plus `localhost`/`127.0.0.1` if needed for development. Turnstile works with Vercel/Supabase; no DNS move or paid Cloudflare plan is required. Keep hostname validation enabled. Save its secret in Supabase as `TURNSTILE_SECRET_KEY` and its public site key in the frontend variable below.
+
 Copy `.env.example` to `.env.local` and set:
 
 ```dotenv
 VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLIC_KEY
+VITE_TURNSTILE_SITE_KEY=YOUR_PUBLIC_TURNSTILE_SITE_KEY
 ```
 
-Add the same two public variables to your frontend hosting environment. Restart Vite after local changes or rebuild/redeploy the hosted frontend after changing hosted variables.
+Add the same three public variables to your frontend hosting environment. Restart Vite after local changes or rebuild/redeploy the hosted frontend after changing hosted variables. Missing Turnstile configuration disables sending; there is no production bypass. Deploy the frontend and backend together once the widget keys are configured.
+
+For an existing installation, also apply `supabase/migrations/20261018120000_chat_abuse_protection.sql` with `npx supabase db push`, then redeploy the chat function. This migration preserves existing daily counters. The new monthly counter starts with requests admitted after this migration.
 
 ```sh
 npm run dev
@@ -77,6 +83,7 @@ The browser sends the public key in the `apikey` header. Only the Edge Function 
 
 ```sh
 npm run test:chat
+npm run test:chat:edge
 npm run lint
 npm run build
 ```
@@ -90,6 +97,8 @@ In the browser, check:
 5. Stop a streaming reply, ask another question, and start a new chat.
 6. Confirm missing/invalid Gemini configuration produces a recoverable error rather than an invented answer.
 7. Check keyboard focus, Escape, mobile layout, light/dark themes, and rate-limit responses.
+8. Send two messages and retry a failed answer: each attempt needs a fresh token. Stop during verification and navigate back to the portfolio; no chat request should be sent after cancellation.
+9. A missing, expired, reused, wrong-host, or wrong-action token must return 403 without using the database/model. A Cloudflare outage must fail closed with 503. Do not flood the hosted function to test this; the local unit tests exercise these paths.
 
 For Edge Function type checking:
 
@@ -101,7 +110,11 @@ Deno alone cannot run Supabase's built-in embedding model; that requires the Sup
 
 ## Cost and operational limits
 
-Defaults in the migration allow five requests per minute and 30 per UTC day for a client-address hash, plus 200 requests per UTC day across the entire site. The global daily counter is the main AI spending control; network address limits are best effort and depend on the gateway's forwarded address headers. CORS restricts browsers, but does not authenticate non-browser callers. Anonymous callers can consume the daily allowance, so add a verified challenge if abuse becomes an issue.
+Limits allow a message every five seconds, five per minute and 30 per UTC day for a client-address hash, plus 20 per minute, 200 per UTC day, and 3,000 per UTC calendar month across the entire site. Atomic global budgets remain the main AI spending control; network-address limits are best effort and depend on the gateway's forwarded address headers. New client buckets are created only for accepted requests. Expired bucket cleanup is indexed and bounded to 100 rows per accepted request.
+
+Each message/retry requires a single-use Turnstile token validated by Cloudflare, including matching the `portfolio_chat` action and the allowed origin's hostname. The endpoint requires Origin, but Origin/CORS alone are not authentication. There is also a per-worker burst guard of 30 verification attempts per minute; it is best effort across worker restarts/instances, not a distributed request cap. Verification times out after eight seconds and body reading after ten seconds. Turnstile loads only after chat arrival, runs on send, and shows a challenge only if Cloudflare requires interaction. The React wrapper handles widget/script lifecycle.
+
+This reduces automated abuse, but cannot stop all bots or network floods. Requests rejected before generation still consume Edge Function invocation/network quota; Turnstile is not an upstream WAF for the direct Supabase endpoint. The Free plans protect against paid overages, not service disruption. Avoid adding a paid Redis service or proxy just for this portfolio; monitor usage and add upstream protection if traffic warrants it.
 
 Every accepted request counts, including failed requests. Recent model context is limited to six messages, questions to 2,000 characters, retrieved chunks to five, and generated output to 600 tokens. Automatic model retries are disabled. Requests time out after 45 seconds. The code does not store conversation text or raw IP addresses. Messages and retrieved context are sent to Google; review your chosen Gemini tier's data-use terms before enabling it publicly.
 
@@ -116,4 +129,4 @@ Supabase Free can pause low-activity projects. The UI shows an error when the se
 - `knowledge/profile.json`: reviewed résumé and experience content.
 - `scripts/knowledge.mjs`: generated project/toolkit knowledge and chunking.
 
-References: [Supabase embeddings](https://supabase.com/docs/guides/ai/quickstarts/generate-text-embeddings), [Supabase function authentication](https://supabase.com/docs/guides/functions/auth), [AI SDK useChat](https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat), [Gemini pricing and data-use terms](https://ai.google.dev/gemini-api/docs/pricing).
+References: [Turnstile validation](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/), [Turnstile React wrapper](https://docs.page/marsidev/react-turnstile), [Supabase embeddings](https://supabase.com/docs/guides/ai/quickstarts/generate-text-embeddings), [Supabase function authentication](https://supabase.com/docs/guides/functions/auth), [AI SDK useChat](https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat), [Gemini pricing and data-use terms](https://ai.google.dev/gemini-api/docs/pricing).

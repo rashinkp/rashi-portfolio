@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type MouseEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { Button } from '@astryxdesign/core/Button'
@@ -12,10 +12,12 @@ import { Markdown, type MarkdownSource } from '@astryxdesign/core/Markdown'
 import { HStack, VStack } from '@astryxdesign/core/Stack'
 import { Text } from '@astryxdesign/core/Text'
 import { RobotPet } from './RobotPet'
+import { ChatVerification, type ChatVerificationHandle } from './ChatVerification'
 
 const projectUrl = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '')
 const publicKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-const configured = Boolean(projectUrl && publicKey)
+const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY
+const configured = Boolean(projectUrl && publicKey && turnstileSiteKey)
 const suggestions = ['What did Rashin build at Offrolls?', 'Tell me about ByWay.', 'What payment integrations has he built?']
 const headerButtonClass = "h-10! w-10! p-0! rounded-lg! text-primary! bg-transparent! bg-none! cursor-pointer! transition-colors hover:bg-neutral! hover:bg-none! focus-visible:bg-neutral!"
 const safeSource = (url: string) => /^\/(?:#[a-z-]+|resume_rashin\.pdf)$/.test(url)
@@ -24,10 +26,23 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
   const compactWelcome = useMediaQuery('(min-width: 480px) and (max-height: 500px)')
   const [input, setInput] = useState('')
   const [validation, setValidation] = useState('')
+  const verification = useRef<ChatVerificationHandle>(null)
   useEffect(() => { if (isActive) document.title = 'Ask Rashin | Portfolio' }, [isActive])
   useEffect(() => {
     if (hasArrived) document.querySelector<HTMLElement>('[data-chat-heading]')?.focus({ preventScroll: true })
   }, [hasArrived])
+  const verifiedFetch: typeof fetch = useCallback(async (url, options) => {
+    if (!verification.current) throw new Error('Security check is loading. Please retry shortly.')
+    const turnstileToken = await verification.current.verify(options?.signal)
+    const response = await fetch(url, { ...options, body: JSON.stringify({ ...JSON.parse(String(options?.body)), turnstileToken }) })
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}))
+      throw new Error(typeof data.error === 'string' ? data.error : 'The assistant is unavailable. Please try again later.')
+    }
+    return response
+  }, [])
+  // Transport stores this callback; verification refs are read only on send.
+  // oxlint-disable-next-line react/refs
   const transport = useMemo(() => new DefaultChatTransport({
     api: `${projectUrl ?? ''}/functions/v1/chat`,
     headers: publicKey ? { apikey: publicKey } : {},
@@ -37,15 +52,8 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
         id, role, parts: parts.filter(part => part.type === 'text'),
       })).filter(message => message.parts.some(part => part.type === 'text' && part.text.trim())) },
     }),
-    fetch: async (url, options) => {
-      const response = await fetch(url, options)
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}))
-        throw new Error(typeof data.error === 'string' ? data.error : 'The assistant is unavailable. Please try again later.')
-      }
-      return response
-    },
-  }), [])
+    fetch: verifiedFetch,
+  }), [verifiedFetch])
   const { messages, sendMessage, status, error, clearError, stop, setMessages, regenerate } = useChat({ transport })
   const busy = status === 'submitted' || status === 'streaming'
   useEffect(() => { if (!isActive) void stop() }, [isActive, stop])
@@ -94,6 +102,7 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
             }
             composer={
               <VStack gap={1} paddingBlock={0}>
+                {configured && isActive && hasArrived && <ChatVerification ref={verification} siteKey={turnstileSiteKey!} />}
                 {error && <VStack gap={2} role="alert">
                   <Text color="secondary">{error.message}</Text>
                   <Button label="Retry answer" variant="secondary" isDisabled={busy} onClick={() => { clearError(); void regenerate() }} />

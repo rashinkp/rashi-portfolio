@@ -1,6 +1,6 @@
 project_id = "rashin-portfolio"
 
-# Public visitors do not sign in. The handler validates input and enforces budgets.
+# Visitors do not sign in. The handler requires Turnstile and atomic usage budgets.
 [functions.chat]
 verify_jwt = false
 

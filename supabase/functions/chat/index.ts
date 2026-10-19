@@ -2,6 +2,9 @@ import { createGoogleGenerativeAI } from 'npm:@ai-sdk/google@3.0.135'
 import { createUIMessageStream, createUIMessageStreamResponse, streamText } from 'npm:ai@6.0.309'
 import { corsHeaders, database, embed, HttpError, readJson, requiredEnv } from '../_shared/runtime.ts'
 import { parseChatInput } from '../_shared/chat-input.ts'
+import { verificationBurstGuard, VerificationError, verifyTurnstile } from '../_shared/turnstile.ts'
+
+const allowVerification = verificationBurstGuard()
 
 Deno.serve(async request => {
   let headers: Record<string, string>
@@ -11,10 +14,16 @@ Deno.serve(async request => {
   if (request.method !== 'POST') return Response.json({ error: 'Method not allowed.' }, { status: 405, headers })
 
   try {
+    const origin = request.headers.get('origin')
+    if (!origin) throw new HttpError(403, 'Open the chat from Rashin’s portfolio.')
     const body = await readJson(request, 40000)
     let turns
     try { turns = parseChatInput(body) }
     catch (error) { throw new HttpError(400, (error as Error).message) }
+    const token = (body as Record<string, unknown>).turnstileToken
+    if (typeof token !== 'string' || !token.trim() || token.length > 2048) throw new HttpError(403, 'Please complete the security check and retry.')
+    if (!allowVerification()) return Response.json({ error: 'Chat is busy. Please retry in a minute.' }, { status: 429, headers: { ...headers, 'Retry-After': '60' } })
+    await verifyTurnstile(token, origin, requiredEnv('TURNSTILE_SECRET_KEY'))
     const google = createGoogleGenerativeAI({ apiKey: requiredEnv('GEMINI_API_KEY') })
     const db = database()
     // Hash the gateway-provided client address; raw IPs and chat text are not stored.
@@ -72,7 +81,8 @@ Current date: ${new Date().toISOString().slice(0, 10)}. References are a snapsho
     })
     return createUIMessageStreamResponse({ stream, headers })
   } catch (error) {
-    const status = error instanceof HttpError ? error.status : 503
-    return Response.json({ error: error instanceof HttpError ? error.message : 'The assistant is temporarily unavailable. Please try again later.' }, { status, headers })
+    const known = error instanceof HttpError || error instanceof VerificationError
+    const status = known ? error.status : 503
+    return Response.json({ error: known ? error.message : 'The assistant is temporarily unavailable. Please try again later.' }, { status, headers })
   }
 })

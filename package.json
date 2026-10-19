@@ -13,13 +13,15 @@
     "preview": "vite preview",
     "knowledge:prepare": "node scripts/prepare-knowledge.mjs",
     "knowledge:ingest": "node --env-file=.env.ingest.local scripts/ingest-knowledge.mjs",
-    "test:chat": "node --test tests/chat.test.mjs"
+    "test:chat": "node --test tests/chat.test.mjs tests/chat-abuse.test.mjs",
+    "test:chat:edge": "npx deno test --allow-env --allow-sys=hostname --config supabase/functions/deno.json supabase/functions/chat/index.test.ts"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.312",
     "@astryxdesign/cli": "^0.5.0",
     "@astryxdesign/core": "^0.5.0",
     "@astryxdesign/theme-neutral": "^0.5.0",
+    "@marsidev/react-turnstile": "^1.6.2",
     "@stylexjs/stylex": "^0.19.0",
     "ai": "^6.0.309",
     "motion": "^14.0.0",
@@ -27,6 +29,7 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
