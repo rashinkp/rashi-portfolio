@@ -17,6 +17,7 @@ import { ChatScrollButton } from './ChatScrollButton'
 import { ChatReplyLink } from './ChatReplyLink'
 import { chatProfileLinks } from './chat-link-plugins'
 import { recentChatHistory } from '../../supabase/functions/_shared/chat-input'
+import { readChatSession, saveChatSession } from '../data/chat-session'
 
 const projectUrl = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '')
 const publicKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
@@ -30,6 +31,7 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
   const compactWelcome = useMediaQuery('(min-width: 480px) and (max-height: 500px)')
   const [input, setInput] = useState('')
   const [validation, setValidation] = useState('')
+  const [savedMessages] = useState(readChatSession)
   const verification = useRef<ChatVerificationHandle>(null)
   useEffect(() => { if (isActive) document.title = 'Ask Rashin | Portfolio' }, [isActive])
   useEffect(() => {
@@ -62,7 +64,15 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
     },
     fetch: verifiedFetch,
   }), [verifiedFetch])
-  const { messages, sendMessage, status, error, clearError, stop, setMessages, regenerate } = useChat({ transport })
+  const { messages, sendMessage, status, error, clearError, stop, setMessages, regenerate } = useChat({ transport, messages: savedMessages })
+  useEffect(() => {
+    // Debounce streaming writes to keep low-end phones responsive. Flush on
+    // reload/navigation so the latest partial reply is not lost.
+    const save = () => saveChatSession(messages)
+    const timer = window.setTimeout(save, 300)
+    window.addEventListener('pagehide', save)
+    return () => { window.clearTimeout(timer); window.removeEventListener('pagehide', save) }
+  }, [messages])
   const busy = status === 'submitted' || status === 'streaming'
   useEffect(() => { if (!isActive) void stop() }, [isActive, stop])
 
@@ -89,7 +99,7 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
           <RobotPet isChatWelcome compact greetOnArrival={hasArrived} />
           <Heading level={1} data-chat-heading="true" tabIndex={-1} justify="center" className="font-sans! text-base! focus:outline-none">Ask Rashin</Heading>
         </HStack>
-        <Button label="New chat" tooltip="New chat" variant="ghost" className={headerButtonClass} onClick={() => { void stop(); setMessages([]); clearError(); setValidation(''); setInput('') }}>
+        <Button label="New chat" tooltip="New chat" variant="ghost" className={headerButtonClass} onClick={() => { void stop(); setMessages([]); saveChatSession([]); clearError(); setValidation(''); setInput('') }}>
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M12 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 3a2.12 2.12 0 0 1 3 3l-8 8-4 1 1-4 8-8Z" /></svg>
         </Button>
       </HStack>
@@ -112,7 +122,7 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
             }
             composer={
               <VStack gap={1} paddingBlock={0}>
-                {configured && isActive && hasArrived && <ChatVerification ref={verification} siteKey={turnstileSiteKey!} />}
+                {configured && isActive && <ChatVerification ref={verification} siteKey={turnstileSiteKey!} />}
                 {error && <VStack gap={2} role="alert">
                   <Text color="secondary">{error.message}</Text>
                   <Button label="Retry answer" variant="secondary" isDisabled={busy} onClick={() => { clearError(); void regenerate() }} />

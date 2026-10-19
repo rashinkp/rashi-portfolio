@@ -105,7 +105,7 @@ function App() {
     <Theme theme={notebookTheme} mode={themeMode}>
       <MotionConfig reducedMotion="user">
       <VStack gap={0} width="100%" height="100dvh" className="overflow-hidden">
-      <MotionVStack data-journey-scene="true" gap={0} className="h-dvh w-full min-h-0 overflow-hidden" inert={Boolean(journey)} aria-busy={Boolean(journey)} initial={false} animate={{ opacity: journey && (returning ? isChatPage : !isChatPage) ? 0.15 : 1 }} transition={{ duration: reducedMotion ? 0 : sceneDuration }}>
+      <MotionVStack data-journey-scene="true" gap={0} className="relative h-dvh w-full min-h-0 overflow-hidden" inert={Boolean(journey)} aria-busy={Boolean(journey)} initial={false} animate={{ opacity: journey && (returning ? isChatPage : !isChatPage) ? 0.15 : 1 }} transition={{ duration: reducedMotion ? 0 : sceneDuration }}>
       {(chatPrepared || isChatPage) && (
         <VStack gap={0} width="100%" height="100dvh" aria-hidden={!isChatPage} inert={!isChatPage} className={`absolute inset-0 z-10 ${isChatPage ? 'visible' : 'invisible pointer-events-none'}`}><Suspense fallback={<VStack height="100dvh" hAlign="center" vAlign="center"><Text role="status">Opening chat…</Text></VStack>}><PortfolioChat isActive={isChatPage} hasArrived={isChatPage && !journey} onBack={returnToPortfolio} /></Suspense></VStack>
       )}

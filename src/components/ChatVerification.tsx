@@ -18,7 +18,9 @@ export function ChatVerification({ siteKey, ref }: { siteKey: string; ref: Ref<C
   const widget = useRef<TurnstileInstance | undefined>(undefined)
   const ready = useRef(false)
   const pending = useRef<{ resolve: (token: string) => void; reject: (error: Error) => void } | null>(null)
-  const [message, setMessage] = useState('Loading security check…')
+  // Routine initialization must not add/remove a status row at the animation
+  // handoff. Explicit verification progress and failures remain visible.
+  const [message, setMessage] = useState('')
 
   function fail(message: string) {
     pending.current?.reject(new Error(message))

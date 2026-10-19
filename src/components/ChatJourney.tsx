@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { animate } from 'motion/react'
 import { MotionVStack } from '../lib/motion'
 import { prepareChatJourney } from '../lib/journeyPreparation'
-import { createChatJourney, sampleJourneyPath, prepareRobotDrawing, robotDrawingPaths, type Point } from '../lib/chatJourney'
+import { createChatJourney, sampleJourneyPath, prepareContinuousRobotDrawing, type Point } from '../lib/chatJourney'
 
 interface ChatJourneyProps {
   origin: Point
@@ -31,6 +31,7 @@ export function ChatJourney({ origin, returning = false, onArrive, onComplete, o
   // Freeze geometry for this journey; viewport changes finish it rather than warp it.
   const [{ width, height }] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }))
   const { path, center, robotScale } = createChatJourney(origin, width, height)
+  const [robotRoute] = useState(prepareContinuousRobotDrawing)
 
   useEffect(() => {
     const departureNode = departure.current
@@ -80,9 +81,9 @@ export function ChatJourney({ origin, returning = false, onArrive, onComplete, o
     let previousDrawing = -1
     let previousScale = -1
     let previousCamera = ''
-    const lengths = prepareRobotDrawing()
+    const lengths = robotRoute.strokes.map(stroke => stroke.length)
     const strokeWidth = metrics.strokeWidth
-    const drawingLength = lengths.reduce((total, length) => total + length, 0)
+    const drawingLength = robotRoute.length
     line.setAttribute('stroke-dasharray', String(length))
     line.setAttribute('stroke-dashoffset', String(length))
     line.setAttribute('opacity', '1')
@@ -99,7 +100,12 @@ export function ChatJourney({ origin, returning = false, onArrive, onComplete, o
       cached.set(name, value)
       element.setAttribute(name, value)
     }
-    const duration = metrics.slow * 6.8
+    const duration = metrics.slow * 8.6
+    // Camera tracking is intentionally slower than the pen. Follow a broad
+    // neighborhood so isolated eyes, arms and legs do not whip the viewport.
+    let cameraFollowX = center.x
+    let cameraFollowY = center.y - 34 * robotScale
+    let previousElapsed = 0
 
     const animation = animate(0, 1, {
       duration,
@@ -138,24 +144,54 @@ export function ChatJourney({ origin, returning = false, onArrive, onComplete, o
         write(departure.current, 'transform', `translate(${origin.x} ${origin.y}) scale(${Math.max(0.001, sourceScale * (1 - collapse))})`)
         write(departure.current, 'opacity', String(1 - smooth((collapse - 0.85) / 0.15)))
         const travel = smooth((progress - 0.04) / 0.4)
-        const drawing = smooth((progress - 0.44) / 0.34)
+        const drawing = clamp((progress - 0.44) / 0.34)
         const settling = smooth((progress - 0.82) / 0.16)
         const sampleIndex = travel * 256
         const lower = Math.min(255, Math.floor(sampleIndex))
         const point = { x: mix(samples[lower].x, samples[lower + 1].x, sampleIndex - lower), y: mix(samples[lower].y, samples[lower + 1].y, sampleIndex - lower) }
+        const penIndex = drawing * 512
+        const penLower = Math.min(511, Math.floor(penIndex))
+        const pen = {
+          x: mix(robotRoute.points[penLower].x, robotRoute.points[penLower + 1].x, penIndex - penLower),
+          y: mix(robotRoute.points[penLower].y, robotRoute.points[penLower + 1].y, penIndex - penLower),
+        }
         const focus = smooth(travel / 0.4)
         const lock = smooth((travel - 0.78) / 0.22)
-        const cameraX = mix(point.x - mix(origin.x, width / 2, focus), center.x - width / 2, lock)
-        const cameraY = mix(point.y - mix(origin.y, height * 0.44, focus), center.y - height * 0.44, lock)
-        const camera = `${cameraX} ${cameraY} ${width} ${height}`
+        const travelCameraX = mix(point.x - mix(origin.x, width / 2, focus), center.x - width / 2, lock)
+        const travelCameraY = mix(point.y - mix(origin.y, height * 0.44, focus), center.y - height * 0.44, lock)
+        // Follow a softly averaged pen position rather than every tiny corner.
+        // All samples are cached; no SVG measurements occur during animation.
+        let averageX = 0
+        let averageY = 0
+        for (let offset = -32; offset <= 32; offset += 8) {
+          const sample = robotRoute.points[Math.max(0, Math.min(512, penLower + offset))]
+          averageX += sample.x
+          averageY += sample.y
+        }
+        const followX = center.x + (averageX / 9 - 52) * robotScale * 0.55
+        const followY = center.y + (averageY / 9 - 56) * robotScale * 0.55
+        const delta = Math.max(0, elapsed - previousElapsed) * duration
+        previousElapsed = elapsed
+        const tracking = 1 - Math.exp(-delta / 0.28)
+        cameraFollowX = mix(cameraFollowX, followX, tracking)
+        cameraFollowY = mix(cameraFollowY, followY, tracking)
+        const closeUp = smooth((progress - 0.43) / 0.12) * (1 - smooth((progress - 0.65) / 0.15))
+        const cameraZoom = 1 + closeUp * 0.85
+        const viewWidth = width / cameraZoom
+        const viewHeight = height / cameraZoom
+        // Blend the camera's focal point, then derive its viewport origin.
+        // Blending origins of differently sized viewports adds unwanted drift.
+        const cameraX = mix(travelCameraX + width / 2, cameraFollowX, closeUp) - viewWidth / 2
+        const cameraY = mix(travelCameraY + height * 0.44, cameraFollowY, closeUp) - viewHeight * 0.44
+        const camera = `${cameraX} ${cameraY} ${viewWidth} ${viewHeight}`
         if (camera !== previousCamera) { write(svg, 'viewBox', camera); previousCamera = camera }
         svg.dataset.stage = progress < 0.44 ? 'travelling' : progress < 0.82 ? 'drawing' : 'arriving'
         write(paper.current, 'opacity', String(smooth(progress / 0.27) * (1 - smooth((progress - 0.81) / 0.05))))
         write(line, 'stroke-dashoffset', String(length * (1 - travel)))
         write(line, 'opacity', String(smooth((progress - 0.04) / 0.025) * (1 - smooth((progress - 0.48) / 0.18))))
-        write(tip.current, 'cx', String(point.x))
-        write(tip.current, 'cy', String(point.y))
-        write(tip.current, 'opacity', String(smooth((collapse - 0.65) / 0.35) * (1 - smooth((progress - 0.43) / 0.04))))
+        write(tip.current, 'cx', String(progress < 0.44 ? point.x : center.x + (pen.x - 52) * robotScale))
+        write(tip.current, 'cy', String(progress < 0.44 ? point.y : center.y + (pen.y - 56) * robotScale))
+        write(tip.current, 'opacity', String(smooth((collapse - 0.65) / 0.35) * (1 - smooth((progress - 0.78) / 0.04))))
         write(dots.current, 'opacity', String(smooth((progress - 0.78) / 0.1)))
         if (progress >= 0.4) arrive()
         const target = targetBounds
@@ -165,13 +201,12 @@ export function ChatJourney({ origin, returning = false, onArrive, onComplete, o
         const scale = mix(robotScale, targetScale, settling)
         // Reveal one stroke at a time, preserving the robot's exact geometry.
         if (drawing !== previousDrawing || scale !== previousScale) {
-          let remaining = drawing * drawingLength
+          const distance = drawing * drawingLength
           outlines.forEach((outline, index) => {
             const length = lengths[index]
-            const drawn = Math.max(0, Math.min(length, remaining))
+            const drawn = Math.max(0, Math.min(length, distance - robotRoute.strokes[index].start))
             write(outline, 'opacity', drawn > 0 ? '1' : '0')
             write(outline, 'stroke-dashoffset', String(1 - drawn / length))
-            remaining -= length
           })
           write(drawingGroup.current, 'stroke-width', String(strokeWidth / scale))
           previousDrawing = drawing
@@ -218,7 +253,7 @@ export function ChatJourney({ origin, returning = false, onArrive, onComplete, o
       window.removeEventListener('resize', onResize)
       preference.removeEventListener('change', onPreference)
     }
-  }, [origin, path, center.x, center.y, robotScale, width, height, onArrive, onComplete, onCancel, returning, metrics])
+  }, [origin, path, center.x, center.y, robotScale, width, height, onArrive, onComplete, onCancel, returning, metrics, robotRoute])
 
   return (
     <MotionVStack ref={root} gap={0} width={width} height={height} className="fixed inset-0 z-70 overflow-hidden text-accent cursor-progress" role="status" aria-label={returning ? "Following a line back to the portfolio. Press Escape to skip." : "Following a line into the chat. Press Escape to skip."} data-chat-journey="true" initial={{ opacity: 1 }} animate={{ opacity: 1 }}>
@@ -239,7 +274,7 @@ export function ChatJourney({ origin, returning = false, onArrive, onComplete, o
         <circle ref={tip} opacity="0" cx={origin.x} cy={origin.y} r="var(--spacing-1)" fill="currentColor" />
         <g ref={bubbleGroup} transform={`translate(${center.x} ${center.y}) scale(${robotScale})`}>
           <g ref={drawingGroup} transform="translate(-52 -56)">
-          {robotDrawingPaths.map((stroke, index) => <path key={index} opacity="0" d={stroke} pathLength={1} stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />)}
+          {robotRoute.strokes.map((stroke, index) => <path key={index} opacity="0" d={stroke.path} pathLength={1} stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />)}
           <g ref={dots} opacity="0" fill="currentColor"><circle cx="40" cy="46" r="2.2" /><circle cx="63" cy="46" r="2.2" /></g>
           </g>
           <g ref={finishedRobot} opacity="0" />

@@ -30,6 +30,7 @@ export const robotDrawingPaths = [
 export function createChatJourney(origin: Point, width: number, height: number) {
   const center = { x: -width * 1.25, y: -height * 1.1 }
   const robotScale = Math.min(width * 0.52, 220) / 104
+  // Meet the first antenna stroke exactly; the travelling tip continues here.
   const end = { x: center.x - robotScale, y: center.y - 34 * robotScale }
   const path = [
     `M ${origin.x} ${origin.y}`,
@@ -93,9 +94,54 @@ export function sampleJourneyPath(path: string, count = 256): Point[] {
 }
 
 let drawingLengths: number[] | undefined
+let continuousDrawing: { length: number; points: Point[]; strokes: { path: string; start: number; length: number }[] } | undefined
+
+export function prepareContinuousRobotDrawing() {
+  if (continuousDrawing) return continuousDrawing
+  const points: Point[] = []
+  const distances: number[] = []
+  const strokes: { path: string; start: number; length: number }[] = []
+  let total = 0
+  let previous: Point | undefined
+  const append = (point: Point) => {
+    if (previous) total += Math.hypot(point.x - previous.x, point.y - previous.y)
+    points.push(point)
+    distances.push(total)
+    previous = point
+  }
+  for (const d of robotDrawingPaths) {
+    const geometry = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    geometry.setAttribute('d', d)
+    const length = geometry.getTotalLength()
+    const first = geometry.getPointAtLength(0)
+    // The pen moves between disconnected details without leaving stray ink.
+    // This keeps the original robot artwork intact instead of drawing diagonals.
+    append({ x: first.x, y: first.y })
+    const start = total
+    const count = Math.max(8, Math.ceil(length / 2))
+    for (let i = 1; i <= count; i++) {
+      const point = geometry.getPointAtLength(length * i / count)
+      append({ x: point.x, y: point.y })
+    }
+    strokes.push({ path: d, start, length: total - start })
+  }
+  let cursor = 1
+  const samples = Array.from({ length: 513 }, (_, i) => {
+    const distance = total * i / 512
+    while (cursor < distances.length - 1 && distances[cursor] < distance) cursor++
+    const fraction = (distance - distances[cursor - 1]) / (distances[cursor] - distances[cursor - 1] || 1)
+    return {
+      x: points[cursor - 1].x + (points[cursor].x - points[cursor - 1].x) * fraction,
+      y: points[cursor - 1].y + (points[cursor].y - points[cursor - 1].y) * fraction,
+    }
+  })
+  continuousDrawing = { length: total, points: samples, strokes }
+  return continuousDrawing
+}
 
 /** Warm detached geometry during idle time; this never forces page layout. */
 export function prepareRobotDrawing() {
+  prepareContinuousRobotDrawing()
   drawingLengths ??= robotDrawingPaths.map(d => {
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
     path.setAttribute('d', d)
