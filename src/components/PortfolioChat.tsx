@@ -3,7 +3,6 @@ import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { Button } from '@astryxdesign/core/Button'
 import { ChatComposer, ChatLayout, ChatMessage, ChatMessageBubble, ChatMessageList } from '@astryxdesign/core/Chat'
-import { Collapsible } from '@astryxdesign/core/Collapsible'
 import { useMediaQuery } from '@astryxdesign/core/hooks'
 import { Grid } from '@astryxdesign/core/Grid'
 import { Heading } from '@astryxdesign/core/Heading'
@@ -13,6 +12,10 @@ import { HStack, VStack } from '@astryxdesign/core/Stack'
 import { Text } from '@astryxdesign/core/Text'
 import { RobotPet } from './RobotPet'
 import { ChatVerification, type ChatVerificationHandle } from './ChatVerification'
+import { ChatSources } from './ChatSources'
+import { ChatScrollButton } from './ChatScrollButton'
+import { ChatReplyLink } from './ChatReplyLink'
+import { chatProfileLinks } from './chat-link-plugins'
 
 const projectUrl = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '')
 const publicKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
@@ -77,7 +80,10 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
         <Button label="Back to portfolio" tooltip="Back to portfolio" href="/" onClick={onBack} variant="ghost" className={headerButtonClass}>
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="m12 5-7 7 7 7M5 12h14" /></svg>
         </Button>
-        <Heading level={1} data-chat-heading="true" tabIndex={-1} justify="center" className="flex-1 font-sans! text-base! focus:outline-none">Ask Rashin</Heading>
+        <HStack gap={2} vAlign="center" hAlign="center" className="min-w-0 flex-1">
+          <RobotPet isChatWelcome compact greetOnArrival={hasArrived} />
+          <Heading level={1} data-chat-heading="true" tabIndex={-1} justify="center" className="font-sans! text-base! focus:outline-none">Ask Rashin</Heading>
+        </HStack>
         <Button label="New chat" tooltip="New chat" variant="ghost" className={headerButtonClass} onClick={() => { void stop(); setMessages([]); clearError(); setValidation(''); setInput('') }}>
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M12 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 3a2.12 2.12 0 0 1 3 3l-8 8-4 1 1-4 8-8Z" /></svg>
         </Button>
@@ -86,11 +92,10 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
           <ChatLayout
             className="[&>div:first-child]:pb-2! [&>div:last-child>div:last-child]:pb-1!"
             density="spacious"
-            scrollButton={messages.length === 0 ? null : undefined}
+            scrollButton={messages.length === 0 ? null : <ChatScrollButton />}
             emptyState={
               <VStack gap={compactWelcome ? 2 : 3} padding={compactWelcome ? 2 : 3} hAlign="center" className={compactWelcome ? "w-full" : "w-full sm:gap-5 sm:p-5"}>
                 <VStack gap={compactWelcome ? 1 : 2} hAlign="center">
-                  <RobotPet isChatWelcome compact={compactWelcome} greetOnArrival={hasArrived} />
                   <Heading level={2} justify="center" textWrap="balance" className={compactWelcome ? "text-base! leading-tight!" : "text-xl! sm:text-2xl!"}>What would you like to know?</Heading>
                   {!compactWelcome && <Text color="secondary" justify="center">Ask about my work, projects, or experience.</Text>}
                 </VStack>
@@ -137,14 +142,11 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
                         {message.role === 'user' ? <Text className="whitespace-pre-wrap wrap-anywhere">{text}</Text> : (
                           <VStack gap={3} className="min-w-0 wrap-anywhere">
                             <Markdown density="compact" contentWidth="100%" className="text-secondary! [&_.astryx-markdown-paragraph]:text-secondary! [&_.astryx-list-item]:text-secondary! [&_strong]:text-primary! [&_li::marker]:text-secondary! [&_.astryx-markdown-paragraph]:leading-normal! [&_.astryx-markdown-paragraph]:my-3! [&_.astryx-markdown-list]:my-2! [&_ul]:my-0! [&_ol]:my-0! [&_ul]:pl-6! [&_ol]:pl-6! [&_li]:leading-normal! [&_li]:my-0! [&_li]:py-1! [&_li]:pl-1! [&_li_.astryx-markdown-paragraph]:my-0! [&_li>ul]:my-2! [&_li>ol]:my-2! [&_h3]:text-lg! [&_h4]:text-base! [&_h3]:font-sans! [&_h4]:font-sans! [&_h3]:mt-5! [&_h3]:mb-2! [&_h4]:mt-4! [&_h4]:mb-2! [&>:first-child]:mt-0! [&>:last-child]:mb-0! [&_table]:text-sm!" headingLevelStart={3} sources={sources} citationStyle="number" isStreaming={status === 'streaming' && message.id === messages.at(-1)?.id}
-                              components={{ image: () => null, link: ({ children }) => <Text>{children}</Text>, citation: ({ source, number }) => <Link href={source.url ?? '/'} target="_blank" rel="noopener noreferrer" tooltip={source.title}>{`[${Object.keys(sources).find(id => sources[id].title === source.title && sources[id].url === source.url) ?? number}]`}</Link> }}>
+                              autolink="gfm" inlinePlugins={chatProfileLinks}
+                              components={{ image: () => null, link: ChatReplyLink, citation: ({ source, number }) => <Link href={source.url ?? '/'} target="_blank" rel="noopener noreferrer" tooltip={source.title}>{`[${Object.keys(sources).find(id => sources[id].title === source.title && sources[id].url === source.url) ?? number}]`}</Link> }}>
                               {text || (busy ? 'Looking through my notes…' : 'No answer was returned. Please retry.')}
                             </Markdown>
-                            {Object.keys(sources).length > 0 && <Collapsible trigger={<Text type="supporting" color="secondary">Sources</Text>} defaultIsOpen={false}>
-                              <VStack gap={2} hAlign="start" paddingBlock={2}>
-                                {Object.entries(sources).map(([id, source]) => <Link key={id} href={source.url ?? '/'} target="_blank" rel="noopener noreferrer">{`${id}. ${source.title}`}</Link>)}
-                              </VStack>
-                            </Collapsible>}
+                            <ChatSources sources={sources} />
                           </VStack>
                         )}
                       </ChatMessageBubble>

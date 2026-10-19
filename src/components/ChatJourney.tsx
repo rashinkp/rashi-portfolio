@@ -45,7 +45,7 @@ export function ChatJourney({ origin, returning = false, onArrive, onComplete, o
     let landingRobot: Element | null = null
     let targetBounds: DOMRect | undefined
     let targetRobot: Element | null = null
-    let portfolioScene: HTMLElement | null = null
+    let destinationScene: HTMLElement | null = null
     const sourceRobot = document.querySelector(returning ? '[data-chat-robot="true"]' : 'a[href="/chat"] svg')
     const sourceBounds = sourceRobot?.getBoundingClientRect()
     const sourceScale = sourceBounds ? Math.min(sourceBounds.width / 104, sourceBounds.height / 112) : 96 / 112
@@ -69,9 +69,9 @@ export function ChatJourney({ origin, returning = false, onArrive, onComplete, o
       // Restore the real robot before removing the overlay; never leave a
       // painted frame with both the overlay and destination robot invisible.
       landingRobot?.removeAttribute('opacity')
-      portfolioScene?.style.removeProperty('transform')
-      portfolioScene?.style.removeProperty('transform-origin')
-      portfolioScene?.style.removeProperty('will-change')
+      destinationScene?.style.removeProperty('transform')
+      destinationScene?.style.removeProperty('transform-origin')
+      destinationScene?.style.removeProperty('will-change')
       onComplete()
     }
     const length = 1
@@ -99,7 +99,7 @@ export function ChatJourney({ origin, returning = false, onArrive, onComplete, o
       cached.set(name, value)
       element.setAttribute(name, value)
     }
-    const duration = metrics.slow * (returning ? 6.8 : 5.6)
+    const duration = metrics.slow * 6.8
 
     const animation = animate(0, 1, {
       duration,
@@ -123,14 +123,12 @@ export function ChatJourney({ origin, returning = false, onArrive, onComplete, o
               copy.setAttribute('height', '112')
               finishedNode.replaceChildren(copy)
             }
-            if (returning) {
-              landingRobot = targetRobot
-              landingRobot.setAttribute('opacity', '0')
-              portfolioScene = document.querySelector<HTMLElement>('[data-journey-scene]')
-              if (portfolioScene) {
-                portfolioScene.style.willChange = 'transform'
-                portfolioScene.style.transformOrigin = '0 0'
-              }
+            landingRobot = targetRobot
+            landingRobot.setAttribute('opacity', '0')
+            destinationScene = document.querySelector<HTMLElement>('[data-journey-scene]')
+            if (destinationScene) {
+              destinationScene.style.willChange = 'transform'
+              destinationScene.style.transformOrigin = '0 0'
             }
           }
         }
@@ -140,8 +138,8 @@ export function ChatJourney({ origin, returning = false, onArrive, onComplete, o
         write(departure.current, 'transform', `translate(${origin.x} ${origin.y}) scale(${Math.max(0.001, sourceScale * (1 - collapse))})`)
         write(departure.current, 'opacity', String(1 - smooth((collapse - 0.85) / 0.15)))
         const travel = smooth((progress - 0.04) / 0.4)
-        const drawing = smooth((progress - 0.44) / (returning ? 0.34 : 0.4))
-        const settling = smooth((progress - (returning ? 0.82 : 0.88)) / (returning ? 0.16 : 0.09))
+        const drawing = smooth((progress - 0.44) / 0.34)
+        const settling = smooth((progress - 0.82) / 0.16)
         const sampleIndex = travel * 256
         const lower = Math.min(255, Math.floor(sampleIndex))
         const point = { x: mix(samples[lower].x, samples[lower + 1].x, sampleIndex - lower), y: mix(samples[lower].y, samples[lower + 1].y, sampleIndex - lower) }
@@ -151,8 +149,8 @@ export function ChatJourney({ origin, returning = false, onArrive, onComplete, o
         const cameraY = mix(point.y - mix(origin.y, height * 0.44, focus), center.y - height * 0.44, lock)
         const camera = `${cameraX} ${cameraY} ${width} ${height}`
         if (camera !== previousCamera) { write(svg, 'viewBox', camera); previousCamera = camera }
-        svg.dataset.stage = progress < 0.44 ? 'travelling' : progress < 0.88 ? 'drawing' : 'arriving'
-        write(paper.current, 'opacity', String(smooth(progress / 0.27) * (returning ? 1 - smooth((progress - 0.81) / 0.05) : 1)))
+        svg.dataset.stage = progress < 0.44 ? 'travelling' : progress < 0.82 ? 'drawing' : 'arriving'
+        write(paper.current, 'opacity', String(smooth(progress / 0.27) * (1 - smooth((progress - 0.81) / 0.05))))
         write(line, 'stroke-dashoffset', String(length * (1 - travel)))
         write(line, 'opacity', String(smooth((progress - 0.04) / 0.025) * (1 - smooth((progress - 0.48) / 0.18))))
         write(tip.current, 'cx', String(point.x))
@@ -179,21 +177,21 @@ export function ChatJourney({ origin, returning = false, onArrive, onComplete, o
           previousDrawing = drawing
           previousScale = scale
         }
-        const solid = targetBounds ? smooth((progress - (returning ? 0.78 : 0.84)) / 0.04) : 0
+        const solid = targetBounds ? smooth((progress - 0.78) / 0.04) : 0
         write(finishedNode, 'opacity', String(solid))
         write(drawingGroup.current, 'opacity', String(1 - solid))
         const screenX = mix(center.x - cameraX, target ? target.left + target.width / 2 : width / 2, settling)
         const screenY = mix(center.y - cameraY, target ? target.top + target.height / 2 : height * 0.44, settling)
-        if (returning && target && progress >= 0.8) {
+        if (target && progress >= 0.8) {
           const zoom = scale / targetScale
           const translateX = screenX - (target.left + target.width / 2) * zoom
           const translateY = screenY - (target.top + target.height / 2) * zoom
-          if (portfolioScene) {
-            portfolioScene.style.transform = `matrix(${zoom}, 0, 0, ${zoom}, ${translateX}, ${translateY})`
+          if (destinationScene) {
+            destinationScene.style.transform = `matrix(${zoom}, 0, 0, ${zoom}, ${translateX}, ${translateY})`
           }
         }
         write(bubbleGroup.current, 'transform', `translate(${mix(center.x, x, settling)} ${mix(center.y, y, settling)}) scale(${scale})`)
-        write(svg, 'opacity', returning ? '1' : String(1 - smooth((progress - 0.94) / 0.06)))
+        write(svg, 'opacity', '1')
       },
       onComplete: finish,
     })
@@ -207,9 +205,9 @@ export function ChatJourney({ origin, returning = false, onArrive, onComplete, o
     return () => {
       animation.stop()
       landingRobot?.removeAttribute('opacity')
-      portfolioScene?.style.removeProperty('transform')
-      portfolioScene?.style.removeProperty('transform-origin')
-      portfolioScene?.style.removeProperty('will-change')
+      destinationScene?.style.removeProperty('transform')
+      destinationScene?.style.removeProperty('transform-origin')
+      destinationScene?.style.removeProperty('will-change')
       if (sourceRobot) {
         if (sourceOpacity == null) sourceRobot.removeAttribute('opacity')
         else sourceRobot.setAttribute('opacity', sourceOpacity)
