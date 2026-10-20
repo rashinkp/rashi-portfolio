@@ -11,6 +11,9 @@ Deno.test('chat rejects abuse before database or model work', async t => {
   let inventoryReads = 0
   let failEmbedding = false
   let groqDraftReasoning: unknown
+  let groqMode = 'good'
+  let googleMode = 'good'
+  let googleCalls = 0
   const projects = ['ByWay', 'Mobilify', 'LinkUp', 'Delivery Management', 'Aadhaar OCR', 'Student Management']
   const catalog = projects.map((name, i) => ({ id: i < 2 ? `project-${name.toLowerCase()}-1` : `additional-project-${i - 1}-1`, title: `${name}: portfolio project`, url: '/#projects', content: `${name}: published project.` }))
   const assert = (condition: boolean, message: string) => { if (!condition) throw new Error(message) }
@@ -38,14 +41,18 @@ Deno.test('chat rejects abuse before database or model work', async t => {
     if (mode === 'allowed' && url.includes('/rest/v1/rpc/match_portfolio_documents')) return Response.json([{ id: 'byway-details-1', title: 'ByWay details', url: '/#projects', content: 'ByWay uses Stripe.', similarity: 0.8 }])
     if (mode === 'allowed' && url.includes('api.groq.com')) {
       generatedPrompt = String(init?.body)
+      if (groqMode === '429' || groqMode === '503') return Response.json({ error: { message: 'Unavailable', type: 'rate_limit_error' } }, { status: Number(groqMode), headers: { 'Retry-After': '60' } })
       const payload = JSON.parse(generatedPrompt)
       const reviewing = payload.messages[0].content.includes('You check whether')
       if (!reviewing) groqDraftReasoning = payload.reasoning_effort
-      return Response.json({ id: 'test', object: 'chat.completion', created: 1, model: 'openai/gpt-oss-20b', choices: [{ index: 0, message: { role: 'assistant', content: reviewing ? '{"supported":true,"issues":[]}' : 'Grounded 【1】 reply.' }, finish_reason: 'stop' }], usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 } })
+      return Response.json({ id: 'test', object: 'chat.completion', created: 1, model: 'openai/gpt-oss-20b', choices: [{ index: 0, message: { role: 'assistant', content: reviewing ? (groqMode === 'reject' ? '{"supported":false,"issues":["Unsupported claim"]}' : '{"supported":true,"issues":[]}') : (groqMode === 'reject' ? 'UNSUPPORTED DRAFT 【1】' : 'Grounded 【1】 reply.') }, finish_reason: 'stop' }], usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 } })
     }
     if (mode === 'allowed' && url.includes('generativelanguage.googleapis.com')) {
       generatedPrompt = String(init?.body)
-      return new Response(`data: ${JSON.stringify({ candidates: [{ content: { role: 'model', parts: [{ text: 'Test reply.' }] }, finishReason: 'STOP' }] })}\n\n`, { headers: { 'Content-Type': 'text/event-stream' } })
+      googleCalls++
+      const reviewing = generatedPrompt.includes('You check whether')
+      const text = reviewing ? (googleMode === 'reject' ? '{"supported":false,"issues":["Unsupported"]}' : '{"supported":true,"issues":[]}') : 'Test reply. [1]'
+      return Response.json({ candidates: [{ content: { role: 'model', parts: [{ text }] }, finishReason: 'STOP' }] })
     }
     throw new Error(`Unexpected outbound call: ${url}`)
   }
@@ -111,6 +118,27 @@ Deno.test('chat rejects abuse before database or model work', async t => {
         assert(generatedPrompt.includes('Do not infer additional product features'), 'Grounding instruction missing')
         assert(stream.includes('Grounded [1] reply.') && !stream.includes('【'), 'Citation normalization failed')
       } finally { Deno.env.set('CHAT_PROVIDER', 'google') }
+    })
+    await t.step('Groq limits, provider failures and rejected drafts fall back without exposing drafts', async () => {
+      Deno.env.set('CHAT_PROVIDER', 'groq')
+      try {
+        for (const failure of ['429', '503', 'reject']) {
+          groqMode = failure
+          const before = googleCalls
+          const beforeBudget = databaseCalls
+          const response = await handler(request(`fallback-${failure}`))
+          const stream = await response.text()
+          assert(response.status === 200 && googleCalls === before + 2, 'Fallback must generate and review with Gemini')
+          assert(databaseCalls === beforeBudget + 1, 'Fallback must not bypass or consume a second site budget')
+          assert(response.headers.get('X-Chat-Model') === 'gemini-3.5-flash-lite', 'Incorrect actual-model header')
+          assert(response.headers.get('X-Chat-Fallback') === (failure === '429' ? 'rate_limit' : failure === 'reject' ? 'grounding' : 'provider_failure'), 'Incorrect fallback reason')
+          assert(stream.includes('Test reply.') && !stream.includes('UNSUPPORTED DRAFT'), 'Rejected draft leaked')
+        }
+        googleMode = 'reject'
+        const response = await handler(request('both-rejected'))
+        const body = await response.text()
+        assert(response.status === 503 && !body.includes('UNSUPPORTED DRAFT') && !body.includes('Test reply.'), 'Unreviewed answer escaped on double failure')
+      } finally { groqMode = 'good'; googleMode = 'good'; Deno.env.set('CHAT_PROVIDER', 'google') }
     })
     await t.step('backend failures log the failing stage without chat text or credentials', async () => {
       failEmbedding = true

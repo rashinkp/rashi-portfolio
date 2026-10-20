@@ -14,7 +14,7 @@
     "test:prerender": "node --test tests/prerender.test.mjs",
     "knowledge:prepare": "node scripts/prepare-knowledge.mjs",
     "knowledge:ingest": "node --env-file=.env.ingest.local scripts/ingest-knowledge.mjs",
-    "test:chat": "node --test tests/chat.test.mjs tests/chat-abuse.test.mjs tests/chat-links.test.mjs tests/chat-citations.test.mjs tests/grounded-answer.test.mjs tests/prepared-verification.test.mjs",
+    "test:chat": "node --test tests/chat.test.mjs tests/chat-abuse.test.mjs tests/chat-links.test.mjs tests/chat-citations.test.mjs tests/grounded-answer.test.mjs tests/chat-fallback.test.mjs tests/prepared-verification.test.mjs",
     "test:chat:edge": "npx deno test --allow-env --allow-sys=hostname --config supabase/functions/deno.json supabase/functions/chat/index.test.ts"
   },
   "dependencies": {

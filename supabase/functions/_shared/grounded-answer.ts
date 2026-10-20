@@ -4,11 +4,12 @@ import { normalizeCitations } from './chat-citations.ts'
 // allowed; malformed reviews and unsupported second drafts fail closed.
 export async function groundedAnswer(options: {
   sourceCount: number
+  attempts?: number
   draft: (feedback: string) => Promise<string>
   review: (answer: string) => Promise<string>
 }) {
   let feedback = ''
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < (options.attempts ?? 2); attempt++) {
     const answer = normalizeCitations(await options.draft(feedback), options.sourceCount).trim()
     if (!answer) throw new Error('Empty draft')
     let verdict: { supported?: boolean; issues?: string[] }

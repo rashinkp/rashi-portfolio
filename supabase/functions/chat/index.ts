@@ -1,11 +1,11 @@
 import { createGoogleGenerativeAI } from 'npm:@ai-sdk/google@3.0.135'
 import { createGroq } from 'npm:@ai-sdk/groq@3.0.77'
-import { createUIMessageStream, createUIMessageStreamResponse, generateText, streamText } from 'npm:ai@6.0.309'
+import { createUIMessageStream, createUIMessageStreamResponse, generateText } from 'npm:ai@6.0.309'
 import { corsHeaders, database, embed, HttpError, readJson, requiredEnv } from '../_shared/runtime.ts'
 import { parseChatInput } from '../_shared/chat-input.ts'
 import { verificationBurstGuard, VerificationError, verifyTurnstile } from '../_shared/turnstile.ts'
 import { buildChatSystem } from '../_shared/chat-prompt.ts'
-import { citationStream } from '../_shared/chat-citations.ts'
+import { reviewedFallback } from '../_shared/chat-fallback.ts'
 import { groundedAnswer, groundingReviewSystem } from '../_shared/grounded-answer.ts'
 import { buildRetrievalQuery, combineChatDocuments, type KnowledgeDocument } from '../_shared/chat-context.ts'
 
@@ -75,75 +75,61 @@ Deno.serve(async request => {
     const inventoryIds = new Set(catalog.map(doc => doc.id))
     const context = documents.map((doc, index) => `[${index + 1}] ${inventoryIds.has(doc.id) ? 'Project inventory: ' : ''}${doc.title}\n${doc.content}`).join('\n\n')
     const abortSignal = AbortSignal.any([request.signal, AbortSignal.timeout(45000)])
-    const model = Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.5-flash-lite'
-    const provider = Deno.env.get('CHAT_PROVIDER') ?? 'google'
-    if (provider !== 'google' && provider !== 'groq') throw new Error('Unsupported chat provider')
-    const modelName = provider === 'groq' ? 'openai/gpt-oss-20b' : model
-    headers['X-Chat-Model'] = modelName
-    headers['Server-Timing'] = timings.join(', ')
-    const stream = createUIMessageStream({
-      execute: async ({ writer }) => {
-        if (!documents.length) {
-          writer.write({ type: 'start' })
-          writer.write({ type: 'text-start', id: 'answer' })
-          writer.write({ type: 'text-delta', id: 'answer', delta: 'I couldn’t find that in Rashin’s résumé or portfolio. Try asking about his projects, experience, or skills, or contact him at rashinkp001@gmail.com.' })
-          writer.write({ type: 'text-end', id: 'answer' })
-          writer.write({ type: 'finish' })
-          return
-        }
-        const modelStarted = performance.now()
-        if (provider === 'groq') {
-          const groqModel = createGroq({ apiKey: requiredEnv('GROQ_API_KEY') })(modelName)
-          const settings = { model: groqModel, temperature: 0.2, maxRetries: 0, abortSignal, providerOptions: { groq: { reasoningEffort: 'low' } } }
-          const system = buildChatSystem(context)
-          const answer = await groundedAnswer({
-            sourceCount: documents.length,
-            draft: async feedback => (await generateText({ ...settings, maxOutputTokens: 600,
-              system: `${system}\nFINAL ANSWER REQUIREMENTS: Use only explicitly stated facts. Cite every factual paragraph or list item with its supplied source number. Do not describe unprovided implementation steps. Say when requested details are not provided.${feedback ? `\nCorrect the previous draft using this review feedback:\n${feedback}` : ''}`,
-              messages: turns,
-            })).text,
-            review: async answer => (await generateText({ ...settings, maxOutputTokens: 1400, providerOptions: { groq: { reasoningEffort: 'medium' } },
-              system: groundingReviewSystem,
-              prompt: JSON.stringify({ trustedReferences: system, question: turns.at(-1)!.content, draft: answer }),
-            })).text,
-          })
-          console.info('portfolio_chat_first_text', { requestId, provider, model: modelName, modelMs: Math.round(performance.now() - modelStarted), totalMs: Math.round(performance.now() - started) })
-          writer.write({ type: 'start' })
-          documents.forEach((doc, index) => writer.write({ type: 'source-url', sourceId: String(index + 1), url: doc.url, title: doc.title }))
-          writer.write({ type: 'text-start', id: 'answer' })
-          writer.write({ type: 'text-delta', id: 'answer', delta: answer })
-          writer.write({ type: 'text-end', id: 'answer' })
-          writer.write({ type: 'finish' })
-          return
-        }
-        let firstText = false
-        const result = streamText({
-          model: createGoogleGenerativeAI({ apiKey: requiredEnv('GEMINI_API_KEY') })(modelName),
-          system: buildChatSystem(context),
+    const geminiName = Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.5-flash-lite'
+    const preference = Deno.env.get('CHAT_PROVIDER') ?? 'google'
+    if (preference !== 'google' && preference !== 'groq') throw new Error('Unsupported chat provider')
+    const system = buildChatSystem(context)
+    const generate = async (provider: 'google' | 'groq', signal: AbortSignal) => {
+      const isGroq = provider === 'groq'
+      const model = isGroq
+        ? createGroq({ apiKey: requiredEnv('GROQ_API_KEY') })('openai/gpt-oss-20b')
+        : createGoogleGenerativeAI({ apiKey: requiredEnv('GEMINI_API_KEY') })(geminiName)
+      const settings = { model, temperature: 0.2, maxRetries: 0, abortSignal: signal }
+      const providerOptions: NonNullable<Parameters<typeof generateText>[0]['providerOptions']> = isGroq ? { groq: { reasoningEffort: 'low' } } : { google: { thinkingConfig: { thinkingLevel: 'minimal' } } }
+      return await groundedAnswer({
+        sourceCount: documents.length, attempts: 1,
+        draft: async () => (await generateText({ ...settings, providerOptions, maxOutputTokens: 600,
+          system: `${system}\nFINAL ANSWER REQUIREMENTS: Use only explicitly stated facts. Cite every factual paragraph or list item with its supplied source number. Do not describe unprovided implementation steps. Say when requested details are not provided.`,
           messages: turns,
-          maxOutputTokens: 600,
-          temperature: 0.2,
-          maxRetries: 0,
-          onChunk: ({ chunk }) => {
-            if (!firstText && chunk.type === 'text-delta') {
-              firstText = true
-              console.info('portfolio_chat_first_text', { requestId, provider, model: modelName, modelMs: Math.round(performance.now() - modelStarted), totalMs: Math.round(performance.now() - started) })
-            }
-          },
-          onError: () => console.error('portfolio_chat_failure', { requestId, stage: 'generation', provider, model: modelName, durationMs: Math.round(performance.now() - started) }),
-          abortSignal,
-          providerOptions: { google: { thinkingConfig: { thinkingLevel: 'minimal' } } },
+        })).text,
+        review: async answer => (await generateText({ ...settings, maxOutputTokens: isGroq ? 1400 : 600,
+          providerOptions: isGroq ? { groq: { reasoningEffort: 'medium' } } : providerOptions,
+          system: groundingReviewSystem,
+          prompt: JSON.stringify({ trustedReferences: system, question: turns.at(-1)!.content, draft: answer }),
+        })).text,
+      })
+    }
+    // Complete generation and review before creating any answer-text events.
+    // Site verification and budgets above apply once, before either provider.
+    let provider: 'google' | 'groq' = preference
+    let reason: string | undefined
+    let answer = 'I couldn’t find that in Rashin’s résumé or portfolio. Try asking about his projects, experience, or skills, or contact him at rashinkp001@gmail.com.'
+    if (documents.length) {
+      if (preference === 'groq') {
+        const result = await reviewedFallback({ signal: abortSignal,
+          primary: signal => generate('groq', signal), fallback: signal => generate('google', signal),
         })
+        answer = result.value
+        provider = result.provider
+        reason = result.reason
+      } else { answer = await generate('google', abortSignal) }
+    }
+    const modelName = provider === 'groq' ? 'openai/gpt-oss-20b' : geminiName
+    mark('generation')
+    headers['X-Chat-Model'] = modelName
+    headers['X-Chat-Fallback'] = reason ?? 'none'
+    headers['Server-Timing'] = timings.join(', ')
+    console.info('portfolio_chat_answer', { requestId, provider, model: modelName, fallback: reason ?? 'none', totalMs: Math.round(performance.now() - started) })
+    const stream = createUIMessageStream({
+      execute: ({ writer }) => {
         writer.write({ type: 'start' })
-        documents.forEach((doc, index) => {
-          writer.write({ type: 'source-url', sourceId: String(index + 1), url: doc.url, title: doc.title })
-        })
-        writer.merge(result.toUIMessageStream({ sendStart: false, sendReasoning: false, onError: () => 'The assistant couldn’t finish this reply. Please try again shortly.' }).pipeThrough(citationStream(documents.length)))
+        documents.forEach((doc, index) => writer.write({ type: 'source-url', sourceId: String(index + 1), url: doc.url, title: doc.title }))
+        writer.write({ type: 'text-start', id: 'answer' })
+        writer.write({ type: 'text-delta', id: 'answer', delta: answer })
+        writer.write({ type: 'text-end', id: 'answer' })
+        writer.write({ type: 'finish' })
       },
-      onError: () => {
-        console.error('portfolio_chat_failure', { requestId, stage: 'generation', provider, model: modelName, durationMs: Math.round(performance.now() - started) })
-        return 'The assistant couldn’t finish this reply. Please retry in a moment or contact Rashin.'
-      },
+      onError: () => 'The assistant couldn’t finish this reply. Please retry in a moment or contact Rashin.',
     })
     return createUIMessageStreamResponse({ stream, headers })
   } catch (error) {
