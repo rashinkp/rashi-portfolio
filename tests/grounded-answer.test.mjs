@@ -30,3 +30,8 @@ test('unreferenced roles and implementation entities are blocked before model re
   const answer=await groundedAnswer({sourceCount:1,references:'Administrators manage the platform.',attempts:1,draft:async()=> 'Administrators manage the platform [1].',review:async()=>'{"supported":true,"issues":[]}'})
   assert.match(answer,/Administrators/)
 })
+
+test('review transport failures keep their status for availability fallback',async()=>{
+  const error=Object.assign(new Error('Unavailable'),{statusCode:503})
+  await assert.rejects(groundedAnswer({sourceCount:1,draft:async()=> 'Draft [1].',review:async()=>{throw error}}),actual=>actual===error)
+})

@@ -34,7 +34,8 @@ export async function groundedAnswer(options: {
       continue
     }
     let verdict: { supported?: boolean; issues?: string[] }
-    try { verdict = JSON.parse(await options.review(answer)) }
+    const review = await options.review(answer)
+    try { verdict = JSON.parse(review) }
     catch { throw groundingError('InvalidGroundingReview', 'Invalid grounding review') }
     if (verdict && verdict.supported === true && Array.isArray(verdict.issues) && verdict.issues.length === 0) return answer
     feedback = (Array.isArray(verdict?.issues) ? verdict.issues.filter(issue => typeof issue === 'string').join('\n').slice(0, 1500) : '') || 'Use only explicitly stated facts and cite the supplied sources.'

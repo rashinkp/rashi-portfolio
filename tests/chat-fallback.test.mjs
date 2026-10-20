@@ -7,8 +7,8 @@ test('approved primary answer does not call fallback', async () => {
   const result = await reviewedFallback({signal:controller().signal,primary:async()=> 'approved',fallback:async()=>{calls++;return 'fallback'}})
   assert.equal(result.provider,'groq');assert.equal(result.value,'approved');assert.equal(calls,0)
 })
-test('limits, failures and rejected grounding each use one reviewed fallback', async () => {
-  for(const [error,reason] of [[Object.assign(new Error('quota'),{statusCode:429}),'rate_limit'],[new Error('unavailable'),'provider_failure'],[new Error('Answer did not pass grounding review'),'grounding']]) {
+test('limits and provider failures use one reviewed fallback', async () => {
+  for(const [error,reason] of [[Object.assign(new Error('quota'),{statusCode:429}),'rate_limit'],[new Error('unavailable'),'provider_failure']]) {
     let calls=0
     const result=await reviewedFallback({signal:controller().signal,primary:async()=>{throw error},fallback:async()=>{calls++;return 'reviewed'}})
     assert.equal(result.reason,reason);assert.equal(result.value,'reviewed');assert.equal(calls,1)
@@ -25,5 +25,11 @@ test('visitor cancellation never starts fallback',async()=>{
   assert.equal(calls,0)
 })
 test('failure of both providers returns no draft',async()=>{
-  await assert.rejects(reviewedFallback({signal:controller().signal,primary:async()=>{throw new Error('grounding review')},fallback:async()=>{throw new Error('fallback review failed')}}),error=>error.message==='Both providers failed'&&error.primaryReason==='grounding'&&error.secondaryReason==='provider_failure')
+  await assert.rejects(reviewedFallback({signal:controller().signal,primary:async()=>{throw new Error('unavailable')},fallback:async()=>{throw new Error('fallback review failed')}}),error=>error.message==='Both providers failed'&&error.primaryReason==='provider_failure'&&error.secondaryReason==='provider_failure')
+})
+
+test('grounding rejection never switches to Gemini',async()=>{
+  let calls=0
+  await assert.rejects(reviewedFallback({signal:controller().signal,primary:async()=>{throw new Error('Answer did not pass grounding review')},fallback:async()=>{calls++;return 'unused'}}),/grounding review/)
+  assert.equal(calls,0)
 })

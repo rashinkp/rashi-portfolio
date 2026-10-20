@@ -51,6 +51,7 @@ export async function reviewedFallback<T>(options: {
     // second provider call. Only provider/grounding failures trigger fallback.
     options.signal.throwIfAborted()
     const reason = fallbackReason(error)
+    if (reason === 'grounding') throw error
     try {
       return { value: await bounded(options.fallback, options.signal, options.fallbackTimeout ?? 32000), provider: 'google' as const, reason }
     } catch (secondary) {

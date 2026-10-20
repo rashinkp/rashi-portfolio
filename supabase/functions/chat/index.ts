@@ -93,9 +93,9 @@ Deno.serve(async request => {
       const settings = { model, temperature: 0.2, maxRetries: 0, abortSignal: signal }
       const providerOptions: NonNullable<Parameters<typeof generateText>[0]['providerOptions']> = isGroq ? { groq: { reasoningEffort: 'low' } } : { google: { thinkingConfig: { thinkingLevel: 'minimal' } } }
       return await groundedAnswer({
-        sourceCount: documents.length, references: context, attempts: 1,
-        draft: async () => (await measureProvider(`${provider}_draft`, () => generateText({ ...settings, providerOptions, maxOutputTokens: 600,
-          system: `${system}\nFINAL ANSWER REQUIREMENTS: Use only explicitly stated facts. Cite every factual paragraph or list item with its supplied source number. Do not describe unprovided implementation steps. Say when requested details are not provided.`,
+        sourceCount: documents.length, references: context, attempts: isGroq ? 2 : 1,
+        draft: async feedback => (await measureProvider(`${provider}_draft`, () => generateText({ ...settings, providerOptions, maxOutputTokens: 600,
+          system: `${system}\nFINAL ANSWER REQUIREMENTS: Use only explicitly stated facts. Cite every factual paragraph or list item with its supplied source number. Do not describe unprovided implementation steps. Say when requested details are not provided.${feedback ? `\nCORRECT THE PREVIOUS DRAFT: ${feedback}` : ''}`,
           messages: turns,
         }))).text,
         review: async answer => {
