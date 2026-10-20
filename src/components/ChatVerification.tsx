@@ -2,9 +2,11 @@ import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'reac
 import { Turnstile, type TurnstileInstance, type TurnstileProps } from '@marsidev/react-turnstile'
 import { VStack } from '@astryxdesign/core/Stack'
 import { Text } from '@astryxdesign/core/Text'
+import { PreparedVerification } from '../lib/preparedVerification'
 
 export interface ChatVerificationHandle {
   verify: (signal?: AbortSignal | null) => Promise<string>
+  prepare: () => void
 }
 
 const options: TurnstileProps['options'] = {
@@ -17,42 +19,35 @@ const verificationFailed = 'Security check failed. Please retry your message.'
 export function ChatVerification({ siteKey, ref }: { siteKey: string; ref: Ref<ChatVerificationHandle> }) {
   const widget = useRef<TurnstileInstance | undefined>(undefined)
   const ready = useRef(false)
-  const pending = useRef<{ resolve: (token: string) => void; reject: (error: Error) => void } | null>(null)
+  // Callbacks read the live widget only when a challenge starts or resets.
+  // oxlint-disable-next-line react/refs
+  const [session] = useState(() => new PreparedVerification(
+    () => { widget.current!.execute() },
+    () => { widget.current?.reset() },
+  ))
   // Routine initialization must not add/remove a status row at the animation
   // handoff. Explicit verification progress and failures remain visible.
   const [message, setMessage] = useState('')
 
   function fail(message: string) {
-    pending.current?.reject(new Error(message))
-    setMessage(message)
+    session.fail(new Error(message))
   }
 
   useImperativeHandle(ref, () => ({
-    verify(signal) {
-      if (signal?.aborted) return Promise.reject(new DOMException('Cancelled', 'AbortError'))
+    prepare() { if (ready.current) session.prepare() },
+    async verify(signal) {
       if (!ready.current || !widget.current) return Promise.reject(new Error('Security check is loading. Please retry shortly.'))
-      if (pending.current) return Promise.reject(new Error('A security check is already running.'))
       setMessage('Checking your browser…')
-      return new Promise<string>((resolve, reject) => {
-        const finish = (token?: string, error?: Error) => {
-          clearTimeout(timeout)
-          signal?.removeEventListener('abort', abort)
-          pending.current = null
-          if (error) { widget.current?.reset(); reject(error) }
-          else { setMessage(''); resolve(token!) }
-        }
-        const abort = () => { setMessage(''); finish(undefined, new DOMException('Cancelled', 'AbortError')) }
-        const timeout = setTimeout(() => {
-          setMessage(verificationFailed)
-          finish(undefined, new Error(verificationFailed))
-        }, 60000)
-        pending.current = { resolve: token => finish(token), reject: error => finish(undefined, error) }
-        signal?.addEventListener('abort', abort, { once: true })
-        try { widget.current!.reset(); widget.current!.execute() }
-        catch { pending.current.reject(new Error(verificationFailed)) }
-      })
+      try {
+        const token = await session.verify(signal)
+        setMessage('')
+        return token
+      } catch (error) {
+        setMessage(error instanceof Error && error.name !== 'AbortError' ? error.message : '')
+        throw error
+      }
     },
-  }), [])
+  }), [session])
 
   useEffect(() => {
     const unavailable = () => {
@@ -68,17 +63,17 @@ export function ChatVerification({ siteKey, ref }: { siteKey: string; ref: Ref<C
       clearTimeout(deadline)
       document.removeEventListener('error', scriptError, true)
       ready.current = false
-      pending.current?.reject(new DOMException('Cancelled', 'AbortError'))
+      session.dispose()
     }
-  }, [])
+  }, [session])
 
   return <VStack gap={1} hAlign="center" width="100%">
     <Turnstile ref={widget} siteKey={siteKey} options={options}
-      onWidgetLoad={() => { ready.current = true; setMessage('') }}
-      onSuccess={token => pending.current?.resolve(token)}
+      onWidgetLoad={() => { ready.current = true; setMessage(''); session.prepare() }}
+      onSuccess={token => session.succeed(token)}
       onError={() => fail(verificationFailed)}
       onTimeout={() => fail(verificationFailed)}
-      onExpire={() => { if (pending.current) fail('Security check expired. Please retry your message.') }}
+      onExpire={() => fail('Security check expired. Please retry your message.')}
       onUnsupported={() => fail('Your browser does not support the security check. Please try another browser.')}
     />
     {message && <Text role="status" type="supporting" color="secondary" justify="center">{message}</Text>}

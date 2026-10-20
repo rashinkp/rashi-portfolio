@@ -20,7 +20,7 @@ export function corsHeaders(request: Request): Record<string, string> {
     ...(origin ? { 'Access-Control-Allow-Origin': origin } : {}),
     'Access-Control-Allow-Headers': 'content-type, apikey, x-ingest-secret, authorization, x-client-info',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Expose-Headers': 'retry-after',
+    'Access-Control-Expose-Headers': 'retry-after, server-timing, x-chat-request-id',
     'Cache-Control': 'no-store',
     Vary: 'Origin',
   }

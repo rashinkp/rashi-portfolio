@@ -9,6 +9,7 @@ Deno.test('chat rejects abuse before database or model work', async t => {
   let modelInitializations = 0
   let generatedPrompt = ''
   let inventoryReads = 0
+  let failEmbedding = false
   const projects = ['ByWay', 'Mobilify', 'LinkUp', 'Delivery Management', 'Aadhaar OCR', 'Student Management']
   const catalog = projects.map((name, i) => ({ id: i < 2 ? `project-${name.toLowerCase()}-1` : `additional-project-${i - 1}-1`, title: `${name}: portfolio project`, url: '/#projects', content: `${name}: published project.` }))
   const assert = (condition: boolean, message: string) => { if (!condition) throw new Error(message) }
@@ -22,7 +23,7 @@ Deno.test('chat rejects abuse before database or model work', async t => {
   Object.defineProperty(Deno, 'serve', { value: (callback: typeof handler) => { handler = callback } })
   Object.assign(globalThis, { Supabase: { ai: { Session: class {
     constructor() { modelInitializations++ }
-    run() { if (mode !== 'allowed') throw new Error('Embedding must not run'); return new Float32Array(384).fill(0.1) }
+    run() { if (failEmbedding || mode !== 'allowed') throw new Error('Embedding must not run'); return new Float32Array(384).fill(0.1) }
   } } } })
   globalThis.fetch = async (input, init) => {
     const url = String(input)
@@ -79,6 +80,21 @@ Deno.test('chat rejects abuse before database or model work', async t => {
       }
       assert(generatedPrompt.includes('list every project in that inventory'), 'Missing completeness instruction')
       assert(stream.includes('Test reply.'), 'Model stream was not forwarded')
+      assert(response.headers.get('Server-Timing')?.includes('embedding;dur=') === true, 'Missing backend timing')
+      assert(response.headers.has('X-Chat-Request-Id'), 'Missing trace ID')
+    })
+    await t.step('backend failures log the failing stage without chat text or credentials', async () => {
+      failEmbedding = true
+      const originalError = console.error
+      const logged: unknown[][] = []
+      console.error = (...args: unknown[]) => { logged.push(args) }
+      try {
+        const response = await handler(request('fresh-failing-token'))
+        assert(response.status === 503, 'Expected safe backend failure')
+        const diagnostic = JSON.stringify(logged)
+        assert(diagnostic.includes('embedding'), 'Failure stage was not recorded')
+        assert(!diagnostic.includes('ByWay?') && !diagnostic.includes('private-test-placeholder'), 'Sensitive data entered diagnostic logs')
+      } finally { console.error = originalError; failEmbedding = false }
     })
   } finally {
     Object.defineProperty(Deno, 'serve', { value: originalServe })

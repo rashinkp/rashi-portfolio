@@ -41,7 +41,13 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
   const verifiedFetch: typeof fetch = useCallback(async (url, options) => {
     if (!verification.current) throw new Error('Security check is loading. Please retry shortly.')
     const turnstileToken = await verification.current.verify(options?.signal)
-    const response = await fetch(url, { ...options, body: JSON.stringify({ ...JSON.parse(String(options?.body)), turnstileToken }) })
+    let response: Response
+    try {
+      response = await fetch(url, { ...options, body: JSON.stringify({ ...JSON.parse(String(options?.body)), turnstileToken }) })
+    } finally {
+      // The submitted token is never reused; prepare a separate one for the next turn.
+      verification.current?.prepare()
+    }
     if (!response.ok) {
       const data = await response.json().catch(() => ({}))
       throw new Error(typeof data.error === 'string' ? data.error : 'The assistant is unavailable. Please try again later.')
