@@ -2,6 +2,7 @@ import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'reac
 import { Turnstile, type TurnstileInstance, type TurnstileProps } from '@marsidev/react-turnstile'
 import { VStack } from '@astryxdesign/core/Stack'
 import { Text } from '@astryxdesign/core/Text'
+import { Button } from '@astryxdesign/core/Button'
 import { PreparedVerification } from '../lib/preparedVerification'
 
 export interface ChatVerificationHandle {
@@ -11,12 +12,12 @@ export interface ChatVerificationHandle {
 
 const options: TurnstileProps['options'] = {
   action: 'portfolio_chat', execution: 'execute', appearance: 'interaction-only',
-  size: 'compact', theme: 'auto', retry: 'never',
+  size: 'flexible', theme: 'auto', retry: 'never',
   refreshExpired: 'manual', refreshTimeout: 'manual', responseField: false,
 }
 const verificationFailed = 'Security check failed. Please retry your message.'
 
-export function ChatVerification({ siteKey, ref }: { siteKey: string; ref: Ref<ChatVerificationHandle> }) {
+export function ChatVerification({ siteKey, ref, onReadyChange }: { siteKey: string; ref: Ref<ChatVerificationHandle>; onReadyChange: (ready: boolean) => void }) {
   const widget = useRef<TurnstileInstance | undefined>(undefined)
   const ready = useRef(false)
   // Callbacks read the live widget only when a challenge starts or resets.
@@ -28,13 +29,17 @@ export function ChatVerification({ siteKey, ref }: { siteKey: string; ref: Ref<C
   // Routine initialization must not add/remove a status row at the animation
   // handoff. Explicit verification progress and failures remain visible.
   const [message, setMessage] = useState('')
+  const [failed, setFailed] = useState(false)
 
   function fail(message: string) {
+    onReadyChange(false)
+    setMessage(message)
+    setFailed(true)
     session.fail(new Error(message))
   }
 
   useImperativeHandle(ref, () => ({
-    prepare() { if (ready.current) session.prepare() },
+    prepare() { if (ready.current) { onReadyChange(false); session.prepare() } },
     async verify(signal) {
       if (!ready.current || !widget.current) return Promise.reject(new Error('Security check is loading. Please retry shortly.'))
       setMessage('Checking your browser…')
@@ -47,11 +52,11 @@ export function ChatVerification({ siteKey, ref }: { siteKey: string; ref: Ref<C
         throw error
       }
     },
-  }), [session])
+  }), [session, onReadyChange])
 
   useEffect(() => {
     const unavailable = () => {
-      if (!ready.current) setMessage('Security check could not load. Check your connection and reload this page.')
+      if (!ready.current) { onReadyChange(false); setMessage('Security check could not load. Reload this page to retry.') }
     }
     const scriptError = (event: Event) => {
       if (event.target instanceof HTMLScriptElement && event.target.id === 'cf-turnstile-script') unavailable()
@@ -65,17 +70,19 @@ export function ChatVerification({ siteKey, ref }: { siteKey: string; ref: Ref<C
       ready.current = false
       session.dispose()
     }
-  }, [session])
+  }, [session, onReadyChange])
 
-  return <VStack gap={1} hAlign="center" width="100%">
+  return <VStack gap={1} hAlign="center" width="100%" className="[&>div]:max-w-full">
     <Turnstile ref={widget} siteKey={siteKey} options={options}
-      onWidgetLoad={() => { ready.current = true; setMessage(''); session.prepare() }}
-      onSuccess={token => session.succeed(token)}
+      onWidgetLoad={() => { ready.current = true; onReadyChange(false); setMessage(''); session.prepare() }}
+      onBeforeInteractive={() => { onReadyChange(false); setMessage('Complete the security check to chat.') }}
+      onSuccess={token => { session.succeed(token); setMessage(''); setFailed(false); onReadyChange(true) }}
       onError={() => fail(verificationFailed)}
       onTimeout={() => fail(verificationFailed)}
       onExpire={() => fail('Security check expired. Please retry your message.')}
       onUnsupported={() => fail('Your browser does not support the security check. Please try another browser.')}
     />
     {message && <Text role="status" type="supporting" color="secondary" justify="center">{message}</Text>}
+    {failed && <Button label="Retry security check" variant="ghost" size="sm" onClick={() => { setFailed(false); setMessage(''); session.prepare() }} />}
   </VStack>
 }

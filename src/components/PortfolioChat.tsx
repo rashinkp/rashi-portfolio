@@ -28,10 +28,33 @@ const suggestions = ['What did Rashin build at Offrolls?', 'Tell me about ByWay.
 const headerButtonClass = "h-10! w-10! p-0! rounded-lg! text-primary! bg-transparent! bg-none! cursor-pointer! transition-colors hover:bg-neutral! hover:bg-none! focus-visible:bg-neutral!"
 const safeSource = (url: string) => /^\/(?:#[a-z-]+|resume_rashin\.pdf)$/.test(url)
 
+// Only two timer updates during a wait; streamed text resets the idle clock.
+// Keep this state local so the transcript does not rerender on a ticking timer.
+function ReplyStatus({ verification, activity }: { verification: boolean; activity: string }) {
+  const [progress, setProgress] = useState({ activity, verification, stage: 0 })
+  const stage = progress.activity === activity && progress.verification === verification ? progress.stage : 0
+  useEffect(() => {
+    const waiting = window.setTimeout(() => setProgress({ activity, verification, stage: 1 }), 8000)
+    const delayed = window.setTimeout(() => setProgress({ activity, verification, stage: 2 }), 20000)
+    return () => { window.clearTimeout(waiting); window.clearTimeout(delayed) }
+  }, [verification, activity])
+  if (activity && stage === 0) return null
+  const label = verification
+    ? 'Complete the security check to continue…'
+    : stage === 2
+      ? 'This is taking longer than usual. You can stop and retry.'
+      : stage === 1
+        ? 'Still working on your reply…'
+        : 'Preparing your reply…'
+  return <ChatMessage sender="assistant"><ChatMessageBubble variant="ghost" width="100%" className="px-0!"><Text role="status" aria-live="polite" color="secondary">{label}</Text></ChatMessageBubble></ChatMessage>
+}
+
 export default function PortfolioChat({ hasArrived = true, isActive = true, onBack }: { hasArrived?: boolean; isActive?: boolean; onBack?: (event: MouseEvent<HTMLElement>) => void }) {
   const compactWelcome = useMediaQuery('(min-width: 480px) and (max-height: 500px)')
   const [input, setInput] = useState('')
   const [validation, setValidation] = useState('')
+  const [verificationReady, setVerificationReady] = useState(false)
+  const [waitingForVerification, setWaitingForVerification] = useState(false)
   const [savedMessages] = useState(readChatSession)
   const verification = useRef<ChatVerificationHandle>(null)
   useEffect(() => { if (isActive) document.title = 'Ask Rashin | Portfolio' }, [isActive])
@@ -40,7 +63,10 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
   }, [hasArrived])
   const verifiedFetch: typeof fetch = useCallback(async (url, options) => {
     if (!verification.current) throw new Error('Security check is loading. Please retry shortly.')
-    const turnstileToken = await verification.current.verify(options?.signal)
+    setWaitingForVerification(true)
+    let turnstileToken: string
+    try { turnstileToken = await verification.current.verify(options?.signal) }
+    finally { setWaitingForVerification(false) }
     let response: Response
     try {
       response = await fetch(url, { ...options, body: JSON.stringify({ ...JSON.parse(String(options?.body)), turnstileToken }) })
@@ -82,11 +108,16 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
     return () => { window.clearTimeout(timer); window.removeEventListener('pagehide', save) }
   }, [messages])
   const busy = status === 'submitted' || status === 'streaming'
+  const lastMessage = messages.at(-1)
+  const replyText = lastMessage?.role === 'assistant'
+    ? lastMessage.parts.filter(part => part.type === 'text').map(part => part.text).join('\n').trim()
+    : ''
+  const missingAnswer = !busy && lastMessage?.role === 'assistant' && !replyText
   useEffect(() => { if (!isActive) void stop() }, [isActive, stop])
 
   function submit(value: string) {
     const question = value.trim()
-    if (!configured || busy || !question) return
+    if (!configured || !verificationReady || busy || !question) return
     if (question.length > 2000) {
       setValidation('Please keep your question under 2,000 characters.')
       return
@@ -123,17 +154,17 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
                   {!compactWelcome && <Text color="secondary" justify="center">Ask about my work, projects, or experience.</Text>}
                 </VStack>
                 <Grid columns={compactWelcome ? 3 : 1} gap={2} width="100%" maxWidth={compactWelcome ? 720 : 440}>
-                  {suggestions.map(question => <Button key={question} label={question} variant="secondary" size="sm" className={compactWelcome ? "h-auto! min-h-10! whitespace-normal! justify-start! text-left! text-sm! leading-snug! px-2! py-1!" : "h-auto! min-h-10! whitespace-normal! justify-start! text-left!"} width="100%" isDisabled={!configured} onClick={() => submit(question)} />)}
+                  {suggestions.map(question => <Button key={question} label={question} variant="secondary" size="sm" className={compactWelcome ? "h-auto! min-h-10! whitespace-normal! justify-start! text-left! text-sm! leading-snug! px-2! py-1!" : "h-auto! min-h-10! whitespace-normal! justify-start! text-left!"} width="100%" isDisabled={!configured || !verificationReady} onClick={() => submit(question)} />)}
                 </Grid>
                 {!configured && <Text role="status" color="secondary">The assistant will be available soon.</Text>}
               </VStack>
             }
             composer={
               <VStack gap={1} paddingBlock={0}>
-                {configured && isActive && <ChatVerification ref={verification} siteKey={turnstileSiteKey!} />}
-                {error && <VStack gap={2} role="alert">
-                  <Text color="secondary">{error.message}</Text>
-                  <Button label="Retry answer" variant="secondary" isDisabled={busy} onClick={() => { clearError(); void regenerate() }} />
+                {configured && isActive && <ChatVerification ref={verification} siteKey={turnstileSiteKey!} onReadyChange={setVerificationReady} />}
+                {(error || missingAnswer) && <VStack gap={2} role="alert">
+                  <Text color="secondary">{error?.message ?? 'No reply was returned. Please try again.'}</Text>
+                  <Button label="Retry answer" variant="secondary" isDisabled={busy || !verificationReady} onClick={() => { clearError(); void regenerate() }} />
                 </VStack>}
                 <ChatComposer
                   className="[&>div:has([contenteditable])]:flex-row! [&>div:has([contenteditable])]:items-center! [&>div:has([contenteditable])]:rounded-2xl! [&>div:has([contenteditable])>div:first-child]:flex-1! [&>div:has([contenteditable])>div:first-child]:min-w-0! [&_.astryx-chat-composer-input]:min-h-8! [&_[contenteditable]]:min-h-8! [&_.astryx-chat-composer-input>[aria-hidden]]:inset-y-0! [&_.astryx-chat-composer-input>[aria-hidden]]:flex! [&_.astryx-chat-composer-input>[aria-hidden]]:items-center!"
@@ -142,8 +173,8 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
                   onSubmit={submit}
                   onStop={() => { void stop() }}
                   isStopShown={busy}
-                  isDisabled={!configured}
-                  placeholder={configured ? 'Ask a question…' : 'The assistant will be available soon…'}
+                  isDisabled={!configured || !verificationReady}
+                  placeholder={!configured ? 'The assistant will be available soon…' : !verificationReady ? 'Complete the security check to chat…' : 'Ask a question…'}
                   status={validation ? { type: 'error', message: validation } : undefined}
                   elevation="none"
                   density="compact"
@@ -159,6 +190,9 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
                     if (part.type === 'source-url' && safeSource(part.url)) sources[part.sourceId] = { title: part.title, url: part.url }
                   }
                   const text = message.parts.filter(part => part.type === 'text').map(part => part.text).join('\n')
+                  // Source metadata can arrive before any answer text.
+                  if (message.role === 'assistant' && !text.trim()) return null
+                  const pendingReply = busy && message.id === lastMessage?.id
                   return (
                     <ChatMessage key={message.id} sender={message.role}>
                       <ChatMessageBubble variant={message.role === 'user' ? 'filled' : 'ghost'} width={message.role === 'assistant' ? '100%' : undefined} className={message.role === 'assistant' ? 'px-0!' : undefined}>
@@ -167,16 +201,16 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
                             <Markdown density="compact" contentWidth="100%" className="text-secondary! [&_.astryx-markdown-paragraph]:text-secondary! [&_.astryx-list-item]:text-secondary! [&_strong]:text-primary! [&_li::marker]:text-secondary! [&_.astryx-markdown-paragraph]:leading-normal! [&_.astryx-markdown-paragraph]:my-3! [&_.astryx-markdown-list]:my-2! [&_ul]:my-0! [&_ol]:my-0! [&_ul]:pl-6! [&_ol]:pl-6! [&_li]:leading-normal! [&_li]:my-0! [&_li]:py-1! [&_li]:pl-1! [&_li_.astryx-markdown-paragraph]:my-0! [&_li>ul]:my-2! [&_li>ol]:my-2! [&_h3]:text-lg! [&_h4]:text-base! [&_h3]:font-sans! [&_h4]:font-sans! [&_h3]:mt-5! [&_h3]:mb-2! [&_h4]:mt-4! [&_h4]:mb-2! [&>:first-child]:mt-0! [&>:last-child]:mb-0! [&_table]:text-sm!" headingLevelStart={3} sources={sources} citationStyle="number" isStreaming={status === 'streaming' && message.id === messages.at(-1)?.id}
                               autolink="gfm" inlinePlugins={chatProfileLinks}
                               components={{ image: () => null, link: ChatReplyLink, citation: ({ source, number }) => <Link href={source.url ?? '/'} target="_blank" rel="noopener noreferrer" tooltip={source.title}>{`[${Object.keys(sources).find(id => sources[id].title === source.title && sources[id].url === source.url) ?? number}]`}</Link> }}>
-                              {text || (busy ? 'Looking through my notes…' : 'No answer was returned. Please retry.')}
+                              {text}
                             </Markdown>
-                            <ChatSources sources={sources} />
+                            {!pendingReply && <ChatSources sources={sources} />}
                           </VStack>
                         )}
                       </ChatMessageBubble>
                     </ChatMessage>
                   )
                 })}
-                {status === 'submitted' && <ChatMessage sender="assistant"><ChatMessageBubble variant="ghost" width="100%" className="px-0!"><Text role="status">Looking through my notes…</Text></ChatMessageBubble></ChatMessage>}
+                {busy && <ReplyStatus verification={waitingForVerification} activity={replyText} />}
               </ChatMessageList>
             ) : null}
           </ChatLayout>
