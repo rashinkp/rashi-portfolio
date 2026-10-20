@@ -10,6 +10,7 @@ Deno.test('chat rejects abuse before database or model work', async t => {
   let generatedPrompt = ''
   let inventoryReads = 0
   let failEmbedding = false
+  let groqDraftReasoning: unknown
   const projects = ['ByWay', 'Mobilify', 'LinkUp', 'Delivery Management', 'Aadhaar OCR', 'Student Management']
   const catalog = projects.map((name, i) => ({ id: i < 2 ? `project-${name.toLowerCase()}-1` : `additional-project-${i - 1}-1`, title: `${name}: portfolio project`, url: '/#projects', content: `${name}: published project.` }))
   const assert = (condition: boolean, message: string) => { if (!condition) throw new Error(message) }
@@ -39,6 +40,7 @@ Deno.test('chat rejects abuse before database or model work', async t => {
       generatedPrompt = String(init?.body)
       const payload = JSON.parse(generatedPrompt)
       const reviewing = payload.messages[0].content.includes('You check whether')
+      if (!reviewing) groqDraftReasoning = payload.reasoning_effort
       return Response.json({ id: 'test', object: 'chat.completion', created: 1, model: 'openai/gpt-oss-20b', choices: [{ index: 0, message: { role: 'assistant', content: reviewing ? '{"supported":true,"issues":[]}' : 'Grounded 【1】 reply.' }, finish_reason: 'stop' }], usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 } })
     }
     if (mode === 'allowed' && url.includes('generativelanguage.googleapis.com')) {
@@ -98,14 +100,14 @@ Deno.test('chat rejects abuse before database or model work', async t => {
         assert(!stream.includes(name), `Unrelated ${name} in sources`)
       }
     })
-    await t.step('Groq uses low reasoning and streams only normalized supported citations', async () => {
+    await t.step('Groq reviews low-reasoning drafts with medium reasoning and normalizes citations', async () => {
       Deno.env.set('CHAT_PROVIDER', 'groq')
       try {
         const response = await handler(request('fresh-groq-token'))
         const stream = await response.text()
         const payload = JSON.parse(generatedPrompt)
         assert(payload.model === 'openai/gpt-oss-20b', 'Wrong Groq model')
-        assert(payload.reasoning_effort === 'low', 'Groq reasoning must be low')
+        assert(groqDraftReasoning === 'low' && payload.reasoning_effort === 'medium', 'Draft and review reasoning settings are incorrect')
         assert(generatedPrompt.includes('Do not infer additional product features'), 'Grounding instruction missing')
         assert(stream.includes('Grounded [1] reply.') && !stream.includes('【'), 'Citation normalization failed')
       } finally { Deno.env.set('CHAT_PROVIDER', 'google') }

@@ -102,7 +102,7 @@ Deno.serve(async request => {
               system: `${system}\nFINAL ANSWER REQUIREMENTS: Use only explicitly stated facts. Cite every factual paragraph or list item with its supplied source number. Do not describe unprovided implementation steps. Say when requested details are not provided.${feedback ? `\nCorrect the previous draft using this review feedback:\n${feedback}` : ''}`,
               messages: turns,
             })).text,
-            review: async answer => (await generateText({ ...settings, maxOutputTokens: 500,
+            review: async answer => (await generateText({ ...settings, maxOutputTokens: 1400, providerOptions: { groq: { reasoningEffort: 'medium' } },
               system: groundingReviewSystem,
               prompt: JSON.stringify({ trustedReferences: system, question: turns.at(-1)!.content, draft: answer }),
             })).text,
