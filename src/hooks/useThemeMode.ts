@@ -1,4 +1,4 @@
-import { useCallback, useState, useSyncExternalStore } from 'react'
+import { useCallback, useLayoutEffect, useState, useSyncExternalStore } from 'react'
 
 export type ThemeMode = 'light' | 'dark'
 
@@ -34,6 +34,16 @@ export function useThemeMode() {
   const preferredMode = useSyncExternalStore(subscribe, getInitialThemeMode, serverThemeMode)
   const [selectedMode, setThemeMode] = useState<ThemeMode | null>(null)
   const themeMode = selectedMode ?? preferredMode
+  useLayoutEffect(() => {
+    // During hydration preferredMode is still the static light snapshot.
+    // Keep the pre-paint preference in place until the browser snapshot updates.
+    const mode = selectedMode ?? getInitialThemeMode()
+    const root = document.documentElement
+    root.dataset.colorMode = mode
+    root.dataset.theme = mode
+    root.classList.toggle('scheme-dark', mode === 'dark')
+    root.classList.toggle('scheme-light', mode === 'light')
+  }, [preferredMode, selectedMode])
   const handleThemeModeChange = useCallback((mode: ThemeMode) => {
     setThemeMode(mode)
 

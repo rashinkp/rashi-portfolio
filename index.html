@@ -2,6 +2,20 @@
 <html lang="en" class="bg-body" data-theme="light" data-astryx-theme="notebook">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Resolve the palette before styles or page content can paint.
+      (() => {
+        let mode;
+        try { mode = localStorage.getItem('rashin-portfolio-theme'); } catch {}
+        if (mode !== 'light' && mode !== 'dark') {
+          mode = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        const root = document.documentElement;
+        root.dataset.colorMode = mode;
+        root.dataset.theme = mode;
+        root.classList.add(`scheme-${mode}`);
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Solway:wght@400;700&display=swap" rel="stylesheet" />

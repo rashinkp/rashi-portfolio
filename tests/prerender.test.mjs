@@ -1,10 +1,36 @@
 import assert from 'node:assert/strict'
 import { readFile, access } from 'node:fs/promises'
 import test from 'node:test'
+import { runInNewContext } from 'node:vm'
 
 const output = new URL('../dist/', import.meta.url)
 const home = await readFile(new URL('index.html', output), 'utf8')
 const chat = await readFile(new URL('chat/index.html', output), 'utf8')
+
+test('theme is selected before stylesheet loading, including saved preferences and blocked storage', () => {
+  const bootstrap = home.match(/<script>([\s\S]*?)<\/script>/)
+  assert.ok(bootstrap)
+  assert.ok(bootstrap.index < home.indexOf('rel="stylesheet"'))
+  for (const { saved, dark, blocked, expected } of [
+    { saved: null, dark: true, expected: 'dark' },
+    { saved: null, dark: false, expected: 'light' },
+    { saved: 'light', dark: true, expected: 'light' },
+    { saved: 'dark', dark: false, expected: 'dark' },
+    { saved: 'invalid', dark: true, expected: 'dark' },
+    { blocked: true, dark: true, expected: 'dark' },
+  ]) {
+    const classes = new Set()
+    const root = { dataset: {}, classList: { add: name => classes.add(name) } }
+    runInNewContext(bootstrap[1], {
+      document: { documentElement: root },
+      localStorage: { getItem: () => { if (blocked) throw new Error('Storage unavailable'); return saved } },
+      matchMedia: () => ({ matches: dark }),
+    })
+    assert.equal(root.dataset.colorMode, expected)
+    assert.equal(root.dataset.theme, expected)
+    assert.ok(classes.has(`scheme-${expected}`))
+  }
+})
 
 test('homepage HTML contains the portfolio before JavaScript executes', () => {
   assert.match(home, /<h1\b[^>]*>hey, I’m Rashin KP<\/h1>/)
