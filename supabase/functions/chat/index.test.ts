@@ -15,7 +15,7 @@ Deno.test('chat rejects abuse before database or model work', async t => {
   const assert = (condition: boolean, message: string) => { if (!condition) throw new Error(message) }
   const environment = {
     ALLOWED_ORIGINS: 'https://portfolio.example', TURNSTILE_SECRET_KEY: 'private-test-placeholder',
-    GEMINI_API_KEY: 'private-test-placeholder', RATE_LIMIT_SALT: 'private-test-placeholder',
+    GEMINI_API_KEY: 'private-test-placeholder', GROQ_API_KEY: 'private-test-placeholder', CHAT_PROVIDER: 'google', RATE_LIMIT_SALT: 'private-test-placeholder',
     SUPABASE_URL: 'https://unit-test.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'private-test-placeholder',
   }
   const previous = Object.fromEntries(Object.keys(environment).map(key => [key, Deno.env.get(key)]))
@@ -35,6 +35,11 @@ Deno.test('chat rejects abuse before database or model work', async t => {
     if (url.includes('/rest/v1/rpc/consume_verified_portfolio_chat_budget')) { databaseCalls++; return Response.json(mode === 'allowed') }
     if (mode === 'allowed' && url.includes('/rest/v1/portfolio_documents?')) { inventoryReads++; return Response.json(catalog) }
     if (mode === 'allowed' && url.includes('/rest/v1/rpc/match_portfolio_documents')) return Response.json([{ id: 'byway-details-1', title: 'ByWay details', url: '/#projects', content: 'ByWay uses Stripe.', similarity: 0.8 }])
+    if (mode === 'allowed' && url.includes('api.groq.com')) {
+      generatedPrompt = String(init?.body)
+      const chunk = { id: 'test', created: 1, model: 'openai/gpt-oss-20b', choices: [{ index: 0, delta: { content: 'Grounded 【1】 reply.' }, finish_reason: null }] }
+      return new Response(`data: ${JSON.stringify(chunk)}\n\ndata: [DONE]\n\n`, { headers: { 'Content-Type': 'text/event-stream' } })
+    }
     if (mode === 'allowed' && url.includes('generativelanguage.googleapis.com')) {
       generatedPrompt = String(init?.body)
       return new Response(`data: ${JSON.stringify({ candidates: [{ content: { role: 'model', parts: [{ text: 'Test reply.' }] }, finishReason: 'STOP' }] })}\n\n`, { headers: { 'Content-Type': 'text/event-stream' } })
@@ -91,6 +96,18 @@ Deno.test('chat rejects abuse before database or model work', async t => {
         assert(!generatedPrompt.includes(name), `Unrelated ${name} in prompt`)
         assert(!stream.includes(name), `Unrelated ${name} in sources`)
       }
+    })
+    await t.step('Groq uses low reasoning and streams only normalized supported citations', async () => {
+      Deno.env.set('CHAT_PROVIDER', 'groq')
+      try {
+        const response = await handler(request('fresh-groq-token'))
+        const stream = await response.text()
+        const payload = JSON.parse(generatedPrompt)
+        assert(payload.model === 'openai/gpt-oss-20b', 'Wrong Groq model')
+        assert(payload.reasoning_effort === 'low', 'Groq reasoning must be low')
+        assert(generatedPrompt.includes('Do not infer additional product features'), 'Grounding instruction missing')
+        assert(stream.includes('Grounded [1] reply.') && !stream.includes('【'), 'Citation normalization failed')
+      } finally { Deno.env.set('CHAT_PROVIDER', 'google') }
     })
     await t.step('backend failures log the failing stage without chat text or credentials', async () => {
       failEmbedding = true

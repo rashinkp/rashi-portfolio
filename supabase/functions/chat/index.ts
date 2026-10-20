@@ -1,9 +1,11 @@
 import { createGoogleGenerativeAI } from 'npm:@ai-sdk/google@3.0.135'
+import { createGroq } from 'npm:@ai-sdk/groq@3.0.77'
 import { createUIMessageStream, createUIMessageStreamResponse, streamText } from 'npm:ai@6.0.309'
 import { corsHeaders, database, embed, HttpError, readJson, requiredEnv } from '../_shared/runtime.ts'
 import { parseChatInput } from '../_shared/chat-input.ts'
 import { verificationBurstGuard, VerificationError, verifyTurnstile } from '../_shared/turnstile.ts'
 import { buildChatSystem } from '../_shared/chat-prompt.ts'
+import { citationStream } from '../_shared/chat-citations.ts'
 import { buildRetrievalQuery, combineChatDocuments, type KnowledgeDocument } from '../_shared/chat-context.ts'
 
 const allowVerification = verificationBurstGuard()
@@ -41,7 +43,6 @@ Deno.serve(async request => {
     await verifyTurnstile(token, origin, requiredEnv('TURNSTILE_SECRET_KEY'))
     mark('verification')
     stage = 'budget'
-    const google = createGoogleGenerativeAI({ apiKey: requiredEnv('GEMINI_API_KEY') })
     const db = database()
     // Hash the gateway-provided client address; raw IPs and chat text are not stored.
     const address = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
@@ -74,6 +75,10 @@ Deno.serve(async request => {
     const context = documents.map((doc, index) => `[${index + 1}] ${inventoryIds.has(doc.id) ? 'Project inventory: ' : ''}${doc.title}\n${doc.content}`).join('\n\n')
     const abortSignal = AbortSignal.any([request.signal, AbortSignal.timeout(45000)])
     const model = Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.5-flash-lite'
+    const provider = Deno.env.get('CHAT_PROVIDER') ?? 'google'
+    if (provider !== 'google' && provider !== 'groq') throw new Error('Unsupported chat provider')
+    const modelName = provider === 'groq' ? 'openai/gpt-oss-20b' : model
+    headers['X-Chat-Model'] = modelName
     headers['Server-Timing'] = timings.join(', ')
     const stream = createUIMessageStream({
       execute: ({ writer }) => {
@@ -88,7 +93,9 @@ Deno.serve(async request => {
         const modelStarted = performance.now()
         let firstText = false
         const result = streamText({
-          model: google(model),
+          model: provider === 'groq'
+            ? createGroq({ apiKey: requiredEnv('GROQ_API_KEY') })(modelName)
+            : createGoogleGenerativeAI({ apiKey: requiredEnv('GEMINI_API_KEY') })(modelName),
           system: buildChatSystem(context),
           messages: turns,
           maxOutputTokens: 600,
@@ -97,18 +104,18 @@ Deno.serve(async request => {
           onChunk: ({ chunk }) => {
             if (!firstText && chunk.type === 'text-delta') {
               firstText = true
-              console.info('portfolio_chat_first_text', { requestId, model, modelMs: Math.round(performance.now() - modelStarted), totalMs: Math.round(performance.now() - started) })
+              console.info('portfolio_chat_first_text', { requestId, provider, model: modelName, modelMs: Math.round(performance.now() - modelStarted), totalMs: Math.round(performance.now() - started) })
             }
           },
-          onError: () => console.error('portfolio_chat_failure', { requestId, stage: 'generation', model, durationMs: Math.round(performance.now() - started) }),
+          onError: () => console.error('portfolio_chat_failure', { requestId, stage: 'generation', provider, model: modelName, durationMs: Math.round(performance.now() - started) }),
           abortSignal,
-          providerOptions: { google: { thinkingConfig: { thinkingLevel: 'minimal' } } },
+          providerOptions: provider === 'groq' ? { groq: { reasoningEffort: 'low' } } : { google: { thinkingConfig: { thinkingLevel: 'minimal' } } },
         })
         writer.write({ type: 'start' })
         documents.forEach((doc, index) => {
           writer.write({ type: 'source-url', sourceId: String(index + 1), url: doc.url, title: doc.title })
         })
-        writer.merge(result.toUIMessageStream({ sendStart: false, onError: () => 'The assistant couldn’t finish this reply. Please try again shortly.' }))
+        writer.merge(result.toUIMessageStream({ sendStart: false, sendReasoning: false, onError: () => 'The assistant couldn’t finish this reply. Please try again shortly.' }).pipeThrough(citationStream(documents.length)))
       },
       onError: () => 'The assistant couldn’t finish this reply. Please retry in a moment or contact Rashin.',
     })

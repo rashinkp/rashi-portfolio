@@ -2,6 +2,7 @@
   "version": "5",
   "specifiers": {
     "npm:@ai-sdk/google@3.0.135": "3.0.135_zod@4.6.7",
+    "npm:@ai-sdk/groq@3.0.77": "3.0.77_zod@4.6.7",
     "npm:@supabase/supabase-js@2.118.0": "2.118.0",
     "npm:ai@6.0.309": "6.0.309_zod@4.6.7"
   },
@@ -17,6 +18,14 @@
     },
     "@ai-sdk/google@3.0.135_zod@4.6.7": {
       "integrity": "sha512-iz75FLJNBzWKhP7ToildSmrblH+0wuoSXMZiuX+A3+kCBZaGEfVdDre97HAEQ68BLKuJB0ucaCvZZUD5UeH9CA==",
+      "dependencies": [
+        "@ai-sdk/provider",
+        "@ai-sdk/provider-utils",
+        "zod"
+      ]
+    },
+    "@ai-sdk/groq@3.0.77_zod@4.6.7": {
+      "integrity": "sha512-kK8s+ktIAmOCmNZU7isS/N86wu6Pg1bW88z9GvvbcxEbCNa+++3/ZS22dk32uMqiGBqYnt06vxku3ew1Ut+2QA==",
       "dependencies": [
         "@ai-sdk/provider",
         "@ai-sdk/provider-utils",

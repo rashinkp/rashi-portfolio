@@ -22,6 +22,7 @@ Copy `.env.functions.example` to `.env.functions.local` and fill in:
 
 - `GEMINI_API_KEY`: your Google AI Studio API key.
 - `GEMINI_MODEL`: defaults to `gemini-3.5-flash-lite`; choose a currently available model in your account if necessary.
+- `CHAT_PROVIDER`: `google` (default) or `groq`. Groq uses `openai/gpt-oss-20b` with low reasoning and the same retrieval and verification safeguards. Set `GROQ_API_KEY` as a server-only secret before selecting Groq. Restore `CHAT_PROVIDER=google` to roll back without changing code. No paid service tier is requested.
 - `TURNSTILE_SECRET_KEY`: the private secret for a free Cloudflare Turnstile Managed widget. Use real credentials; public test secrets are rejected by the backend.
 - `ALLOWED_ORIGINS`: exact frontend origins, separated by commas, without paths or trailing slashes. Include your production domain and `http://localhost:5173` for local development. If Vite chooses another port, add that exact origin too.
 - `RATE_LIMIT_SALT`: a random private value used to hash client addresses.
@@ -132,3 +133,5 @@ Supabase Free can pause low-activity projects. The UI shows an error when the se
 References: [Turnstile validation](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/), [Turnstile React wrapper](https://docs.page/marsidev/react-turnstile), [Supabase embeddings](https://supabase.com/docs/guides/ai/quickstarts/generate-text-embeddings), [Supabase function authentication](https://supabase.com/docs/guides/functions/auth), [AI SDK useChat](https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat), [Gemini pricing and data-use terms](https://ai.google.dev/gemini-api/docs/pricing).
 
 Source selection sends named project or Offrolls passages for focused questions, up to three strong semantic matches for general questions, and the complete project inventory only for project-list requests. Follow-up questions retain their named subject.
+
+Grounding instructions prohibit inferring product or billing features from technology names. A bounded streaming citation normalizer converts decorative numeric citations to supported ASCII citations and removes unknown source numbers. It does not buffer the whole answer or rewrite model facts. `X-Chat-Model` identifies the selected model for timing diagnostics; reasoning text is not forwarded to visitors.
