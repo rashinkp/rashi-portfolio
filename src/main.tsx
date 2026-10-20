@@ -2,6 +2,9 @@ import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import { installAnalytics } from './lib/analytics'
+
+installAnalytics()
 
 const root = document.getElementById('root')!
 const app = (

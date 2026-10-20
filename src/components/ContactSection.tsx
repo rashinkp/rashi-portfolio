@@ -7,6 +7,7 @@ import { TextInput } from '@astryxdesign/core/TextInput'
 import { TextArea } from '@astryxdesign/core/TextArea'
 import { useMediaQuery } from '@astryxdesign/core/hooks'
 import { SectionTitle } from './SectionTitle'
+import { trackEvent } from '../lib/analytics'
 
 export function ContactSection() {
   const mobile = useMediaQuery('(max-width: 639px)')
@@ -21,6 +22,7 @@ export function ContactSection() {
     event.preventDefault()
     setAttempted(true)
     if (!name.trim() || !validEmail || !message.trim()) return
+    trackEvent('contact_draft_opened')
     const subject = encodeURIComponent(`Portfolio enquiry from ${name.trim()}`)
     const body = encodeURIComponent(`${message.trim()}\n\nFrom: ${name.trim()}\nEmail: ${email.trim()}`)
     window.location.href = `mailto:rashinkp001@gmail.com?subject=${subject}&body=${body}`

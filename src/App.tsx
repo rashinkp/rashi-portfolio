@@ -9,6 +9,7 @@ import { MotionVStack, durationToken } from './lib/motion'
 import { ChatJourney } from './components/ChatJourney'
 import { prepareChatJourney } from './lib/journeyPreparation'
 import type { Point } from './lib/chatJourney'
+import { trackPage } from './lib/analytics'
 import { useSmoothAnchors } from './hooks/useSmoothAnchors'
 import { useThemeMode } from './hooks/useThemeMode'
 import { useInitialAnchor } from './hooks/useInitialAnchor'
@@ -19,6 +20,7 @@ const PortfolioChat = memo(lazy(loadChat))
 function App() {
   const { themeMode, onThemeModeChange } = useThemeMode()
   const [isChatPage, setIsChatPage] = useState(() => typeof window !== 'undefined' && window.location.pathname.replace(/\/$/, '') === '/chat')
+  useEffect(() => { trackPage(isChatPage ? '/chat' : '/') }, [isChatPage])
   const [chatPrepared, setChatPrepared] = useState(isChatPage)
   const [portfolioVisited, setPortfolioVisited] = useState(!isChatPage)
   const [journey, setJourney] = useState<Point | null>(null)

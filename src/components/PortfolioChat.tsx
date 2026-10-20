@@ -18,6 +18,7 @@ import { ChatReplyLink } from './ChatReplyLink'
 import { chatProfileLinks } from './chat-link-plugins'
 import { recentChatHistory } from '../../supabase/functions/_shared/chat-input'
 import { readChatSession, saveChatSession } from '../data/chat-session'
+import { trackEvent } from '../lib/analytics'
 
 const projectUrl = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '')
 const publicKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
@@ -45,6 +46,7 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
       const data = await response.json().catch(() => ({}))
       throw new Error(typeof data.error === 'string' ? data.error : 'The assistant is unavailable. Please try again later.')
     }
+    trackEvent('chat_message_sent')
     return response
   }, [])
   // Transport stores this callback; verification refs are read only on send.
