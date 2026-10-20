@@ -109,7 +109,7 @@ function App() {
       {(chatPrepared || isChatPage) && (
         <VStack gap={0} width="100%" height="100dvh" aria-hidden={!isChatPage} inert={!isChatPage} className={`absolute inset-0 z-10 ${isChatPage ? 'visible' : 'invisible pointer-events-none'}`}><Suspense fallback={<VStack height="100dvh" hAlign="center" vAlign="center"><Text role="status">Opening chat…</Text></VStack>}><PortfolioChat isActive={isChatPage} hasArrived={isChatPage && !journey} onBack={returnToPortfolio} /></Suspense></VStack>
       )}
-      {portfolioVisited && <VStack gap={0} width="100%" height="100dvh" aria-hidden={isChatPage} inert={isChatPage} className={`absolute inset-0 z-0 overflow-hidden ${isChatPage ? 'pointer-events-none' : ''}`}>
+      {portfolioVisited && <VStack gap={0} width="100%" height="100dvh" aria-hidden={isChatPage} inert={isChatPage} className={`absolute inset-0 z-0 overflow-hidden ${isChatPage ? 'invisible pointer-events-none' : 'visible'}`}>
       <PortfolioView themeMode={themeMode} onThemeModeChange={onThemeModeChange} openChat={openChat} preloadChat={preloadChat} />
       </VStack>}
       </MotionVStack>

@@ -10,5 +10,9 @@ const app = (
   </StrictMode>
 )
 
-if (root.dataset.prerendered === 'true') hydrateRoot(root, app)
+// A cached/fallback homepage response must not flash or hydrate the portfolio
+// when the actual browser route is chat.
+const isChatRoute = window.location.pathname.replace(/\/$/, '') === '/chat'
+if (isChatRoute && root.dataset.prerendered === 'true') root.replaceChildren()
+if (!isChatRoute && root.dataset.prerendered === 'true') hydrateRoot(root, app)
 else createRoot(root).render(app)

@@ -3,6 +3,9 @@ import { useLayoutEffect } from 'react'
 // Fresh shared links can target a section; reloads start a new visit at the top.
 export function useInitialAnchor() {
   useLayoutEffect(() => {
+    // Homepage section restoration must never scroll the document to the
+    // portfolio while a direct chat visit is mounting.
+    if (window.location.pathname.replace(/\/$/, '') === '/chat') return
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
     const reloaded = navigation?.type === 'reload'
     const previousRestoration = history.scrollRestoration
