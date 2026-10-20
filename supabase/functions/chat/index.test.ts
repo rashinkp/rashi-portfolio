@@ -37,8 +37,9 @@ Deno.test('chat rejects abuse before database or model work', async t => {
     if (mode === 'allowed' && url.includes('/rest/v1/rpc/match_portfolio_documents')) return Response.json([{ id: 'byway-details-1', title: 'ByWay details', url: '/#projects', content: 'ByWay uses Stripe.', similarity: 0.8 }])
     if (mode === 'allowed' && url.includes('api.groq.com')) {
       generatedPrompt = String(init?.body)
-      const chunk = { id: 'test', created: 1, model: 'openai/gpt-oss-20b', choices: [{ index: 0, delta: { content: 'Grounded 【1】 reply.' }, finish_reason: null }] }
-      return new Response(`data: ${JSON.stringify(chunk)}\n\ndata: [DONE]\n\n`, { headers: { 'Content-Type': 'text/event-stream' } })
+      const payload = JSON.parse(generatedPrompt)
+      const reviewing = payload.messages[0].content.includes('You check whether')
+      return Response.json({ id: 'test', object: 'chat.completion', created: 1, model: 'openai/gpt-oss-20b', choices: [{ index: 0, message: { role: 'assistant', content: reviewing ? '{"supported":true,"issues":[]}' : 'Grounded 【1】 reply.' }, finish_reason: 'stop' }], usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 } })
     }
     if (mode === 'allowed' && url.includes('generativelanguage.googleapis.com')) {
       generatedPrompt = String(init?.body)

@@ -7,8 +7,7 @@ export function citationStream<T extends { type: string; id?: string; delta?: st
     while (text) {
       const match = text.match(/^[[【]([\d,\s]+)[\]】]/)
       if (match) {
-        const numbers = match[1].split(',').map(value => Number(value.trim()))
-        output += [...new Set(numbers)].filter(n => Number.isInteger(n) && n >= 1 && n <= sourceCount).map(n => `[${n}]`).join('')
+        output += normalizeCitations(match[0], sourceCount)
         text = text.slice(match[0].length)
       } else if (!final && text.length <= 64 && /^[[【]\s*(?:\d[\d,\s]*)?$/.test(text)) {
         return [output, text]
@@ -38,4 +37,9 @@ export function citationStream<T extends { type: string; id?: string; delta?: st
       controller.enqueue(chunk)
     },
   })
+}
+export function normalizeCitations(text: string, sourceCount: number) {
+  return text.replace(/[[【]([\d,\s]+)[\]】]/g, (_match, values: string) =>
+    [...new Set(values.split(',').map(value => Number(value.trim())))]
+      .filter(n => Number.isInteger(n) && n >= 1 && n <= sourceCount).map(n => `[${n}]`).join(''))
 }
