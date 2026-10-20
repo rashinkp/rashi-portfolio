@@ -21,3 +21,12 @@ test('malformed or contradictory reviews fail closed', async () => {
     await assert.rejects(groundedAnswer({ sourceCount: 1, draft: async () => 'Draft [1].', review: async () => review }))
   }
 })
+test('unreferenced roles and implementation entities are blocked before model review',async()=>{
+  for(const claim of ['Administrators manage the platform [1].','It uses JWT sessions [1].','It creates payment intents [1].','It uses Stripe Checkout [1].']){
+    let reviews=0
+    await assert.rejects(groundedAnswer({sourceCount:1,references:'Students and tutors use OAuth and Stripe webhooks.',attempts:1,draft:async()=>claim,review:async()=>{reviews++;return '{"supported":true,"issues":[]}'}}),/grounding review/)
+    assert.equal(reviews,0)
+  }
+  const answer=await groundedAnswer({sourceCount:1,references:'Administrators manage the platform.',attempts:1,draft:async()=> 'Administrators manage the platform [1].',review:async()=>'{"supported":true,"issues":[]}'})
+  assert.match(answer,/Administrators/)
+})
