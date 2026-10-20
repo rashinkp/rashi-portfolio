@@ -28,24 +28,25 @@ const suggestions = ['What did Rashin build at Offrolls?', 'Tell me about ByWay.
 const headerButtonClass = "h-10! w-10! p-0! rounded-lg! text-primary! bg-transparent! bg-none! cursor-pointer! transition-colors hover:bg-neutral! hover:bg-none! focus-visible:bg-neutral!"
 const safeSource = (url: string) => /^\/(?:#[a-z-]+|resume_rashin\.pdf)$/.test(url)
 
-// Only two timer updates during a wait; streamed text resets the idle clock.
-// Keep this state local so the transcript does not rerender on a ticking timer.
-function ReplyStatus({ verification, activity }: { verification: boolean; activity: string }) {
-  const [progress, setProgress] = useState({ activity, verification, stage: 0 })
-  const stage = progress.activity === activity && progress.verification === verification ? progress.stage : 0
+// Keep wait state local: no ticking transcript rerenders and no artificial
+// delay before displaying text. Source arrival is the real retrieval signal.
+function ReplyStatus({ verification, activity, contextReady }: { verification: boolean; activity: string; contextReady: boolean }) {
+  const [elapsed, setElapsed] = useState({ activity, verification, ready: false })
+  const hasWaited = elapsed.activity === activity && elapsed.verification === verification && elapsed.ready
   useEffect(() => {
-    const waiting = window.setTimeout(() => setProgress({ activity, verification, stage: 1 }), 8000)
-    const delayed = window.setTimeout(() => setProgress({ activity, verification, stage: 2 }), 20000)
-    return () => { window.clearTimeout(waiting); window.clearTimeout(delayed) }
+    const timer = window.setTimeout(() => setElapsed({ activity, verification, ready: true }), activity ? 8000 : 900)
+    return () => window.clearTimeout(timer)
   }, [verification, activity])
-  if (activity && stage === 0) return null
-  const label = verification
-    ? 'Complete the security check to continue…'
-    : stage === 2
-      ? 'This is taking longer than usual. You can stop and retry.'
-      : stage === 1
-        ? 'Still working on your reply…'
-        : 'Preparing your reply…'
+  if (activity && !hasWaited) return null
+  const label = activity
+    ? 'Continuing…'
+    : verification && hasWaited
+      ? 'Checking your browser…'
+      : contextReady
+        ? 'Putting the details together…'
+        : hasWaited
+          ? 'Looking through my notes…'
+          : 'Reading your question…'
   return <ChatMessage sender="assistant"><ChatMessageBubble variant="ghost" width="100%" className="px-0!"><Text role="status" aria-live="polite" color="secondary">{label}</Text></ChatMessageBubble></ChatMessage>
 }
 
@@ -210,7 +211,7 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
                     </ChatMessage>
                   )
                 })}
-                {busy && <ReplyStatus verification={waitingForVerification} activity={replyText} />}
+                {busy && <ReplyStatus verification={waitingForVerification} activity={replyText} contextReady={lastMessage?.role === 'assistant' && lastMessage.parts.some(part => part.type === 'source-url')} />}
               </ChatMessageList>
             ) : null}
           </ChatLayout>
