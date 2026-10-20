@@ -51,6 +51,11 @@ Deno.test('chat rejects abuse before database or model work', async t => {
       generatedPrompt = String(init?.body)
       googleCalls++
       const reviewing = generatedPrompt.includes('You check whether')
+      if (reviewing) {
+        const config = JSON.parse(generatedPrompt).generationConfig
+        assert(config.responseMimeType === 'application/json' && config.responseSchema?.required?.includes('supported'), 'Gemini review must use a required JSON schema')
+        assert(config.maxOutputTokens === 1400, 'Gemini review token allowance is too small')
+      }
       const text = reviewing ? (googleMode === 'reject' ? '{"supported":false,"issues":["Unsupported"]}' : '{"supported":true,"issues":[]}') : 'Test reply. [1]'
       return Response.json({ candidates: [{ content: { role: 'model', parts: [{ text }] }, finishReason: 'STOP' }] })
     }
@@ -130,7 +135,7 @@ Deno.test('chat rejects abuse before database or model work', async t => {
           const stream = await response.text()
           assert(response.status === 200 && googleCalls === before + 2, 'Fallback must generate and review with Gemini')
           assert(databaseCalls === beforeBudget + 1, 'Fallback must not bypass or consume a second site budget')
-          assert(response.headers.get('X-Chat-Model') === 'gemini-3.5-flash-lite', 'Incorrect actual-model header')
+          assert(response.headers.get('X-Chat-Model') === 'gemini-3.1-flash-lite', 'Incorrect actual-model header')
           assert(response.headers.get('X-Chat-Fallback') === (failure === '429' ? 'rate_limit' : failure === 'reject' ? 'grounding' : 'provider_failure'), 'Incorrect fallback reason')
           assert(stream.includes('Test reply.') && !stream.includes('UNSUPPORTED DRAFT'), 'Rejected draft leaked')
         }

@@ -17,7 +17,7 @@ test('unsupported answers have a bounded retry and cannot be returned', async ()
   assert.equal(drafts, 2)
 })
 test('malformed or contradictory reviews fail closed', async () => {
-  for (const review of ['not JSON', '{"supported":true}', '{"supported":true,"issues":["Unsupported detail"]}']) {
+  for (const review of ['null', 'not JSON', '{"supported":true}', '{"supported":true,"issues":["Unsupported detail"]}']) {
     await assert.rejects(groundedAnswer({ sourceCount: 1, draft: async () => 'Draft [1].', review: async () => review }))
   }
 })

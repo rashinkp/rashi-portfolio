@@ -1,6 +1,6 @@
 import { createGoogleGenerativeAI } from 'npm:@ai-sdk/google@3.0.135'
 import { createGroq } from 'npm:@ai-sdk/groq@3.0.77'
-import { createUIMessageStream, createUIMessageStreamResponse, generateText } from 'npm:ai@6.0.309'
+import { createUIMessageStream, createUIMessageStreamResponse, generateText, Output, jsonSchema } from 'npm:ai@6.0.309'
 import { corsHeaders, database, embed, HttpError, readJson, requiredEnv } from '../_shared/runtime.ts'
 import { parseChatInput } from '../_shared/chat-input.ts'
 import { verificationBurstGuard, VerificationError, verifyTurnstile } from '../_shared/turnstile.ts'
@@ -75,7 +75,7 @@ Deno.serve(async request => {
     const inventoryIds = new Set(catalog.map(doc => doc.id))
     const context = documents.map((doc, index) => `[${index + 1}] ${inventoryIds.has(doc.id) ? 'Project inventory: ' : ''}${doc.title}\n${doc.content}`).join('\n\n')
     const abortSignal = AbortSignal.any([request.signal, AbortSignal.timeout(45000)])
-    const geminiName = Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.5-flash-lite'
+    const geminiName = Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.1-flash-lite'
     const preference = Deno.env.get('CHAT_PROVIDER') ?? 'google'
     if (preference !== 'google' && preference !== 'groq') throw new Error('Unsupported chat provider')
     const system = buildChatSystem(context)
@@ -92,11 +92,15 @@ Deno.serve(async request => {
           system: `${system}\nFINAL ANSWER REQUIREMENTS: Use only explicitly stated facts. Cite every factual paragraph or list item with its supplied source number. Do not describe unprovided implementation steps. Say when requested details are not provided.`,
           messages: turns,
         })).text,
-        review: async answer => (await generateText({ ...settings, maxOutputTokens: isGroq ? 1400 : 600,
-          providerOptions: isGroq ? { groq: { reasoningEffort: 'medium' } } : providerOptions,
-          system: groundingReviewSystem,
-          prompt: JSON.stringify({ trustedReferences: system, question: turns.at(-1)!.content, draft: answer }),
-        })).text,
+        review: async answer => {
+          const result = await generateText({ ...settings, maxOutputTokens: 1400,
+            ...(!isGroq ? { output: Output.object({ schema: jsonSchema<{ supported: boolean; issues: string[] }>({ type: 'object', properties: { supported: { type: 'boolean' }, issues: { type: 'array', items: { type: 'string' } } }, required: ['supported', 'issues'], additionalProperties: false }) }) } : {}),
+            providerOptions: isGroq ? { groq: { reasoningEffort: 'medium' } } : providerOptions,
+            system: groundingReviewSystem,
+            prompt: JSON.stringify({ trustedReferences: system, question: turns.at(-1)!.content, draft: answer }),
+          })
+          return isGroq ? result.text : JSON.stringify(result.output)
+        },
       })
     }
     // Complete generation and review before creating any answer-text events.
