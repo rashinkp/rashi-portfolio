@@ -31,7 +31,7 @@ test('every published project survives a narrow or empty semantic search', async
   const catalog = documents.filter(doc => /^(?:project-|additional-project-)/.test(doc.id))
   const bywayOnly = documents.filter(doc => doc.id.startsWith('byway-details'))
   for (const matches of [[], bywayOnly, [catalog[0], ...bywayOnly]]) {
-    const combined = combineChatDocuments(catalog, matches)
+    const combined = combineChatDocuments(catalog, matches, [{ role: 'user', content: 'List all projects' }])
     for (const project of [...featuredProjects, ...additionalProjects]) {
       assert.ok(combined.some(doc => doc.content.includes(project.name)), `Missing ${project.name}`)
     }
@@ -81,4 +81,24 @@ test('knowledge is deterministic, source-linked, and includes current projects',
   assert.ok(first.documents.some(doc => doc.title.includes('ByWay')))
   assert.ok(first.documents.some(doc => doc.title.includes('Mobilify')))
   assert.ok(!JSON.stringify(first).includes('9037210082'))
+})
+
+
+test('focused sources exclude unrelated projects and weak semantic matches', async () => {
+  const { documents } = await buildKnowledge()
+  const catalog = documents.filter(doc => /^(?:project-|additional-project-)/.test(doc.id))
+  const offrolls = documents.find(doc => doc.id === 'offrolls-1')
+  const profile = documents.find(doc => doc.id === 'profile-1')
+  const education = documents.find(doc => doc.id === 'education-1')
+  const ask = content => [{ role: 'user', content }]
+  const matches = [{ ...offrolls, similarity: 0.85 }, { ...profile, similarity: 0.76 }, { ...education, similarity: 0.65 }]
+  assert.deepEqual(combineChatDocuments(catalog, matches, ask('What did Rashin build at Offrolls?')).map(doc => doc.id), ['offrolls-1'])
+  const byway = documents.find(doc => doc.id === 'byway-details-1')
+  assert.deepEqual(combineChatDocuments(catalog, [byway, ...matches], ask('Tell me about ByWay')).map(doc => doc.id), ['project-byway-1', 'byway-details-1'])
+  assert.deepEqual(combineChatDocuments(catalog, matches, ask('Tell me about his experience')).map(doc => doc.id), ['offrolls-1'])
+  assert.equal(combineChatDocuments(catalog, [], ask('What is his salary?')).length, 0)
+  const history = [...ask('Tell me about ByWay'), { role: 'assistant', content: 'ByWay is a learning platform.' }]
+  assert.deepEqual(combineChatDocuments(catalog, [byway, ...matches], [...history, ...ask('What payments does it support?')]).map(doc => doc.id), ['project-byway-1', 'byway-details-1'])
+  assert.equal(combineChatDocuments(catalog, matches, [...history, ...ask('What other projects has he built?')]).length, catalog.length)
+  assert.deepEqual(combineChatDocuments(catalog, matches, [...history, ...ask('What did Rashin build at Offrolls?')]).map(doc => doc.id), ['offrolls-1'])
 })

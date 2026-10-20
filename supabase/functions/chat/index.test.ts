@@ -43,9 +43,9 @@ Deno.test('chat rejects abuse before database or model work', async t => {
   }
   try {
     await import('./index.ts')
-    const request = (token: unknown, origin: string | null = 'https://portfolio.example') => new Request('https://unit-test.supabase.co/functions/v1/chat', {
+    const request = (token: unknown, origin: string | null = 'https://portfolio.example', question = 'ByWay?') => new Request('https://unit-test.supabase.co/functions/v1/chat', {
       method: 'POST', headers: { 'Content-Type': 'application/json', ...(origin ? { Origin: origin } : {}) },
-      body: JSON.stringify({ turnstileToken: token, messages: [{ role: 'user', parts: [{ type: 'text', text: 'ByWay?' }] }] }),
+      body: JSON.stringify({ turnstileToken: token, messages: [{ role: 'user', parts: [{ type: 'text', text: question }] }] }),
     })
     await t.step('missing, spoofed-origin and missing-origin requests fail before verification', async () => {
       for (const req of [request(undefined), request('token', 'https://evil.example'), request('token', null)]) {
@@ -69,9 +69,9 @@ Deno.test('chat rejects abuse before database or model work', async t => {
       assert(databaseCalls === 1 && response.headers.get('Retry-After') === '60', 'Missing database check or retry guidance')
       assert(modelInitializations === 0, 'Rejected traffic initialized the embedding model')
     })
-    await t.step('a narrow search still sends all published projects to the model and citations', async () => {
+    await t.step('project-list requests send the full inventory despite a narrow search', async () => {
       mode = 'allowed'
-      const response = await handler(request('fresh-catalog-token'))
+      const response = await handler(request('fresh-catalog-token', 'https://portfolio.example', 'List all projects'))
       const stream = await response.text()
       assert(response.status === 200 && inventoryReads === 1, 'Missing project inventory query')
       for (const name of projects) {
@@ -82,6 +82,15 @@ Deno.test('chat rejects abuse before database or model work', async t => {
       assert(stream.includes('Test reply.'), 'Model stream was not forwarded')
       assert(response.headers.get('Server-Timing')?.includes('embedding;dur=') === true, 'Missing backend timing')
       assert(response.headers.has('X-Chat-Request-Id'), 'Missing trace ID')
+    })
+    await t.step('focused questions omit unrelated inventory from prompt and citations', async () => {
+      const response = await handler(request('fresh-focused-token'))
+      const stream = await response.text()
+      assert(generatedPrompt.includes('ByWay uses Stripe.'), 'Relevant detail missing')
+      for (const name of projects.slice(1)) {
+        assert(!generatedPrompt.includes(name), `Unrelated ${name} in prompt`)
+        assert(!stream.includes(name), `Unrelated ${name} in sources`)
+      }
     })
     await t.step('backend failures log the failing stage without chat text or credentials', async () => {
       failEmbedding = true

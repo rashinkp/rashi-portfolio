@@ -69,7 +69,7 @@ Deno.serve(async request => {
     if (matches.error) throw new Error('Knowledge search failed')
     mark('retrieval')
     stage = 'generation'
-    const documents = combineChatDocuments(catalog, (matches.data as (KnowledgeDocument & { similarity: number })[]).filter(doc => doc.similarity >= 0.25))
+    const documents = combineChatDocuments(catalog, (matches.data as (KnowledgeDocument & { similarity: number })[]).filter(doc => doc.similarity >= 0.25), turns)
     const inventoryIds = new Set(catalog.map(doc => doc.id))
     const context = documents.map((doc, index) => `[${index + 1}] ${inventoryIds.has(doc.id) ? 'Project inventory: ' : ''}${doc.title}\n${doc.content}`).join('\n\n')
     const abortSignal = AbortSignal.any([request.signal, AbortSignal.timeout(45000)])
