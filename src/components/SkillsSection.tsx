@@ -4,7 +4,7 @@ import { useMediaQuery } from '@astryxdesign/core/hooks'
 import { Grid } from '@astryxdesign/core/Grid'
 import { VStack } from '@astryxdesign/core/Stack'
 import { Text } from '@astryxdesign/core/Text'
-import { MotionCard, noteSpring, revealSpring, durationToken } from '../lib/motion'
+import { MotionCard, noteSpring } from '../lib/motion'
 import { Heading } from '@astryxdesign/core/Heading'
 import { skillGroups } from '../data/portfolio'
 import { skillLogos } from '../data/skillLogos'
@@ -34,17 +34,14 @@ export function SkillsSection() {
               {group.skills.map((skill, index) => {
                 const logo = skillLogos[skill]
                 return (
+                  <VStack key={skill} gap={0} className="min-w-0 w-full" data-reveal="toolkit-tile" data-reveal-column={index % columns}>
                   <MotionCard
-                    key={skill}
                     variant="transparent"
                     padding={0.5}
                     elevation="none"
                     className="group cursor-pointer w-full! max-w-full! aspect-5/4 min-h-16 min-w-0 rounded-lg! border-(length:--focus-outline-width)! border-primary! transition-colors duration-(--duration-medium-min) ease-out hover:bg-inverted! motion-reduce:transition-none"
                     data-skill-tile={skill}
                     initial={false}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: false, amount: 0.15 }}
-                    transition={{ ...revealSpring, delay: reduced ? 0 : (index % columns) * durationToken(globalThis.document?.documentElement, '--duration-fast-min', 0.13) }}
                     whileHover={reduced ? undefined : { scale: 1.06, rotate: index % 2 ? 4 : -4, transition: noteSpring }}
                   >
                     <VStack gap={1} hAlign="center" vAlign="center" height="100%">
@@ -60,6 +57,7 @@ export function SkillsSection() {
                       <Text justify="center" weight="bold" textWrap="nowrap" className="text-xs! whitespace-pre-line! leading-tight! group-hover:text-body! transition-colors duration-(--duration-medium-min) ease-out motion-reduce:transition-none">{labels[skill] ?? skill}</Text>
                     </VStack>
                   </MotionCard>
+                  </VStack>
                 )
               })}
             </Grid>

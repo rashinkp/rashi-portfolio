@@ -1,6 +1,6 @@
-import { useRef, useState, type ReactNode, type RefObject } from 'react'
-import { useReducedMotion } from 'motion/react'
-import { MotionCard, noteSpring, durationToken } from '../lib/motion'
+import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { useAnimationControls, useReducedMotion } from 'motion/react'
+import { MotionCard, noteSpring, durationToken, spacingToken } from '../lib/motion'
 
 interface StickyNoteProps {
   children: ReactNode
@@ -18,6 +18,26 @@ export function StickyNote({ children, label, color, className, angle, bounds, e
   const [entered, setEntered] = useState(false)
   const element = useRef<HTMLDivElement>(null)
   const currentPosition = useRef({ x: 0, y: 0 })
+  const controls = useAnimationControls()
+  const entranceFinished = useRef(false)
+  useLayoutEffect(() => {
+    if (enterOnView) return
+    let cancelled = false
+    const target = { opacity: 1, x: position.x, y: position.y, rotate: reduced ? 0 : angle }
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      controls.set({ ...target, rotate: 0 })
+      entranceFinished.current = true
+      return
+    }
+    if (!entranceFinished.current) {
+      controls.set({ opacity: 0, x: position.x, y: position.y + spacingToken('--spacing-10'), rotate: angle * 3 })
+    }
+    void controls.start(target, entranceFinished.current ? noteSpring : {
+      type: 'spring', stiffness: 120, damping: 24, mass: 1,
+      delay: durationToken(element.current ?? undefined, '--duration-medium-max', 0.55),
+    }).then(() => { if (!cancelled) entranceFinished.current = true })
+    return () => { cancelled = true; controls.stop() }
+  }, [controls, enterOnView, position.x, position.y, angle, reduced])
 
   return (
     <MotionCard
@@ -50,7 +70,7 @@ export function StickyNote({ children, label, color, className, angle, bounds, e
       dragElastic={0}
       dragMomentum={false}
       initial={false}
-      animate={enterOnView ? undefined : { opacity: 1, x: position.x, y: position.y, rotate: reduced ? 0 : angle }}
+      animate={enterOnView ? undefined : controls}
       whileInView={enterOnView ? { opacity: 1, x: position.x, y: position.y, rotate: reduced ? 0 : angle } : undefined}
       viewport={enterOnView ? { once: true, amount: 0.15 } : undefined}
       transition={reduced ? { duration: 0 } : entered ? noteSpring : {

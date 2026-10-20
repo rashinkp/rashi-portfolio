@@ -80,7 +80,7 @@ export function useRevealOnScroll(routeKey = false) {
           opacity: [0, 1], y: [Number.isFinite(distance) ? distance : 0, 0],
         }, {
           type: 'spring', stiffness: 120, damping: 24, mass: 1,
-          delay: index++ * durationToken(element, '--duration-fast-min', 0.13),
+          delay: (element.dataset.revealColumn !== undefined ? Number(element.dataset.revealColumn) : index++) * durationToken(element, '--duration-fast-min', 0.13),
           onComplete: () => {
             if (animations.get(element) === animation) finish(element)
           },
