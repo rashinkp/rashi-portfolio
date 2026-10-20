@@ -34,7 +34,16 @@ test('HTML assets and search discovery files are present in the deployment', asy
       await access(new URL(asset.slice(1), output))
     }
   }
-  for (const file of ['robots.txt', 'sitemap.xml', 'google00f07e7f2f1b0a64.html']) {
+  for (const file of ['favicon.png', 'robots.txt', 'sitemap.xml', 'google00f07e7f2f1b0a64.html']) {
     await access(new URL(file, output))
   }
+  const website = [...home.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)]
+    .map(([, json]) => JSON.parse(json)).find(item => item['@type'] === 'WebSite')
+  assert.equal(website?.name, 'Rashin KP')
+  assert.equal(website?.url, 'https://rashinkp.vercel.app/')
+  assert.match(home, /rel="icon" type="image\/png" sizes="96x96" href="\/favicon.png"/)
+  const favicon = await readFile(new URL('favicon.png', output))
+  assert.equal(favicon.subarray(1, 4).toString(), 'PNG')
+  assert.equal(favicon.readUInt32BE(16), 96)
+  assert.equal(favicon.readUInt32BE(20), 96)
 })
