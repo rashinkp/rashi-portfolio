@@ -61,6 +61,14 @@ export class PreparedVerification {
     else this.token = { value: token, createdAt: this.now() }
   }
 
+  // An idle token expiring is routine, not a failed message. Ignore stale
+  // expiry callbacks after the token was consumed or a new check started.
+  expire(value?: string) {
+    if (!this.token || (value && value !== this.token.value)) return false
+    this.token = null
+    return true
+  }
+
   fail(error: Error) {
     this.running = false
     this.token = null
