@@ -70,7 +70,7 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
     finally { setWaitingForVerification(false) }
     let response: Response
     try {
-      response = await fetch(url, { ...options, body: JSON.stringify({ ...JSON.parse(String(options?.body)), turnstileToken }) })
+      response = await fetch(url, { ...options, body: JSON.stringify({ ...JSON.parse(String(options?.body)), turnstileToken, reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches }) })
     } finally {
       // The submitted token is never reused; prepare a separate one for the next turn.
       verification.current?.prepare()

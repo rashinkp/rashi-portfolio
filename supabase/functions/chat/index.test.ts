@@ -16,6 +16,8 @@ Deno.test('chat rejects abuse before database or model work', async t => {
   let correctionSeen = false
   let googleMode = 'good'
   let googleCalls = 0
+  let reviewGate: Promise<void> | undefined
+  let reviewStarted = false
   const projects = ['ByWay', 'Mobilify', 'LinkUp', 'Delivery Management', 'Aadhaar OCR', 'Student Management']
   const catalog = projects.map((name, i) => ({ id: i < 2 ? `project-${name.toLowerCase()}-1` : `additional-project-${i - 1}-1`, title: `${name}: portfolio project`, url: '/#projects', content: `${name}: published project.` }))
   const assert = (condition: boolean, message: string) => { if (!condition) throw new Error(message) }
@@ -56,6 +58,8 @@ Deno.test('chat rejects abuse before database or model work', async t => {
       googleCalls++
       const reviewing = generatedPrompt.includes('You check whether')
       if (reviewing) {
+        reviewStarted = true
+        await reviewGate
         const config = JSON.parse(generatedPrompt).generationConfig
         assert(config.responseMimeType === 'application/json' && config.responseSchema?.required?.includes('supported'), 'Gemini review must use a required JSON schema')
         assert(config.maxOutputTokens === 1400, 'Gemini review token allowance is too small')
@@ -67,9 +71,9 @@ Deno.test('chat rejects abuse before database or model work', async t => {
   }
   try {
     await import('./index.ts')
-    const request = (token: unknown, origin: string | null = 'https://portfolio.example', question = 'ByWay?') => new Request('https://unit-test.supabase.co/functions/v1/chat', {
+    const request = (token: unknown, origin: string | null = 'https://portfolio.example', question = 'ByWay?', reducedMotion = true) => new Request('https://unit-test.supabase.co/functions/v1/chat', {
       method: 'POST', headers: { 'Content-Type': 'application/json', ...(origin ? { Origin: origin } : {}) },
-      body: JSON.stringify({ turnstileToken: token, messages: [{ role: 'user', parts: [{ type: 'text', text: question }] }] }),
+      body: JSON.stringify({ turnstileToken: token, reducedMotion, messages: [{ role: 'user', parts: [{ type: 'text', text: question }] }] }),
     })
     await t.step('missing, spoofed-origin and missing-origin requests fail before verification', async () => {
       for (const req of [request(undefined), request('token', 'https://evil.example'), request('token', null)]) {
@@ -115,6 +119,23 @@ Deno.test('chat rejects abuse before database or model work', async t => {
         assert(!generatedPrompt.includes(name), `Unrelated ${name} in prompt`)
         assert(!stream.includes(name), `Unrelated ${name} in sources`)
       }
+    })
+    await t.step('word reveal begins only after review approves the complete answer', async () => {
+      let release!: () => void
+      reviewGate = new Promise<void>(resolve => { release = resolve })
+      reviewStarted = false
+      let returned = false
+      const pending = handler(request('approved-word-reveal', 'https://portfolio.example', 'ByWay?', false)).then(response => { returned = true; return response })
+      try {
+        for (let i = 0; i < 100 && !reviewStarted; i++) await new Promise(resolve => setTimeout(resolve, 5))
+        assert(reviewStarted && !returned, 'A response escaped before review completed')
+        release()
+        const response = await pending
+        const events = (await response.text()).split('\n').filter(line => line.startsWith('data: {')).map(line => JSON.parse(line.slice(6)))
+        const words = events.filter(event => event.type === 'text-delta').map(event => event.delta)
+        assert(words.length > 1 && words.join('') === 'Test reply. [1]', 'Reviewed answer was not revealed progressively and exactly')
+        assert(events.at(-1).type === 'finish', 'Missing completed reveal')
+      } finally { release(); reviewGate = undefined }
     })
     await t.step('Groq reviews low-reasoning drafts with medium reasoning and normalizes citations', async () => {
       Deno.env.set('CHAT_PROVIDER', 'groq')

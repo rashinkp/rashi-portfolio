@@ -143,3 +143,5 @@ Verification and site budgets run once before either provider. Fallback never by
 Before model review, a conservative entity check rejects unreferenced administrator roles, JWT mechanisms, payment intents, and Checkout sessions, except explicit statements that the information is absent. This addresses recurring model inferences; it does not replace review of other factual claims.
 
 The `Server-Timing` header separates input, server verification, budget, catalog, embedding, retrieval, and total generation. Provider-specific `groq_draft`, `groq_review`, `google_draft`, and `google_review` durations are nested inside generation, so do not sum them twice. They include provider request/response time. Browser time outside the handler includes transport, preflight, routing, and startup and cannot be assigned to one of those causes from this header alone.
+
+After approval, the answer is emitted word by word over at most roughly 1.8 seconds. Markdown and citation text are preserved, stopping cancels the reveal, and the browser’s reduced-motion preference skips the pacing. This is presentation of an already reviewed answer; unreviewed drafts are never streamed.

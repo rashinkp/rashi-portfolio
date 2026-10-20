@@ -6,6 +6,7 @@ import { parseChatInput } from '../_shared/chat-input.ts'
 import { verificationBurstGuard, VerificationError, verifyTurnstile } from '../_shared/turnstile.ts'
 import { buildChatSystem } from '../_shared/chat-prompt.ts'
 import { FallbackFailure, reviewedFallback } from '../_shared/chat-fallback.ts'
+import { revealApprovedAnswer } from '../_shared/approved-reveal.ts'
 import { groundedAnswer, groundingReviewSystem } from '../_shared/grounded-answer.ts'
 import { buildRetrievalQuery, combineChatDocuments, type KnowledgeDocument } from '../_shared/chat-context.ts'
 
@@ -131,11 +132,14 @@ Deno.serve(async request => {
     headers['Server-Timing'] = [...timings, ...providerTimings].join(', ')
     console.info('portfolio_chat_answer', { requestId, provider, model: modelName, fallback: reason ?? 'none', totalMs: Math.round(performance.now() - started), providerTimings })
     const stream = createUIMessageStream({
-      execute: ({ writer }) => {
+      execute: async ({ writer }) => {
         writer.write({ type: 'start' })
         documents.forEach((doc, index) => writer.write({ type: 'source-url', sourceId: String(index + 1), url: doc.url, title: doc.title }))
         writer.write({ type: 'text-start', id: 'answer' })
-        writer.write({ type: 'text-delta', id: 'answer', delta: answer })
+        await revealApprovedAnswer({ answer, signal: request.signal,
+          reducedMotion: (body as Record<string, unknown>).reducedMotion === true,
+          write: delta => writer.write({ type: 'text-delta', id: 'answer', delta }),
+        })
         writer.write({ type: 'text-end', id: 'answer' })
         writer.write({ type: 'finish' })
       },
