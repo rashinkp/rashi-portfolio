@@ -137,7 +137,7 @@ Deno.serve(async request => {
     const status = known ? error.status : 503
     headers['Server-Timing'] = [...timings, `${stage};dur=${(performance.now() - stageStarted).toFixed(1)}`].join(', ')
     if (error instanceof FallbackFailure) headers['X-Chat-Fallback'] = error.primaryReason
-    if (!known) console.error('portfolio_chat_failure', { requestId, stage, durationMs: Math.round(performance.now() - started), ...(error instanceof FallbackFailure ? { primaryReason: error.primaryReason, secondaryReason: error.secondaryReason } : {}) })
+    if (!known) console.error('portfolio_chat_failure', { requestId, stage, durationMs: Math.round(performance.now() - started), ...(error instanceof FallbackFailure ? { primaryReason: error.primaryReason, secondaryReason: error.secondaryReason, secondaryStatus: error.secondaryStatus, secondaryType: error.secondaryType } : {}) })
     return Response.json({ error: known ? error.message : 'The assistant is temporarily unavailable. Please try again later.' }, { status, headers })
   }
 })

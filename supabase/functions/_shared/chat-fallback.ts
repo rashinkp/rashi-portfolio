@@ -3,10 +3,16 @@ export type FallbackReason = 'rate_limit' | 'timeout' | 'grounding' | 'provider_
 export class FallbackFailure extends Error {
   readonly primaryReason: FallbackReason
   readonly secondaryReason: FallbackReason
-  constructor(primaryReason: FallbackReason, secondaryReason: FallbackReason) {
+  readonly secondaryStatus?: number
+  readonly secondaryType?: string
+  constructor(primaryReason: FallbackReason, secondaryReason: FallbackReason, secondary?: unknown) {
     super('Both providers failed')
     this.primaryReason = primaryReason
     this.secondaryReason = secondaryReason
+    if (secondary && typeof secondary === 'object') {
+      if ('statusCode' in secondary && typeof secondary.statusCode === 'number') this.secondaryStatus = secondary.statusCode
+      if ('name' in secondary && typeof secondary.name === 'string' && /^[A-Za-z_]{1,80}$/.test(secondary.name)) this.secondaryType = secondary.name
+    }
   }
 }
 
@@ -49,7 +55,7 @@ export async function reviewedFallback<T>(options: {
       return { value: await bounded(options.fallback, options.signal, options.fallbackTimeout ?? 32000), provider: 'google' as const, reason }
     } catch (secondary) {
       options.signal.throwIfAborted()
-      throw new FallbackFailure(reason, fallbackReason(secondary))
+      throw new FallbackFailure(reason, fallbackReason(secondary), secondary)
     }
   }
 }
