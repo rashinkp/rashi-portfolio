@@ -121,6 +121,7 @@ Deno.test('chat rejects abuse before database or model work', async t => {
         assert(payload.model === 'openai/gpt-oss-20b', 'Wrong Groq model')
         assert(groqDraftReasoning === 'low' && payload.reasoning_effort === 'medium', 'Draft and review reasoning settings are incorrect')
         assert(generatedPrompt.includes('Do not infer additional product features'), 'Grounding instruction missing')
+        assert(response.headers.get('Server-Timing')?.includes('groq_draft;dur=') === true && response.headers.get('Server-Timing')?.includes('groq_review;dur=') === true, 'Missing separate Groq draft/review timings')
         assert(stream.includes('Grounded [1] reply.') && !stream.includes('【'), 'Citation normalization failed')
       } finally { Deno.env.set('CHAT_PROVIDER', 'google') }
     })

@@ -17,6 +17,12 @@ Deno.serve(async request => {
   let stage = 'input'
   let stageStarted = started
   const timings: string[] = []
+  const providerTimings: string[] = []
+  const measureProvider = async <T>(name: string, run: () => Promise<T>) => {
+    const begin = performance.now()
+    try { return await run() }
+    finally { providerTimings.push(`${name};dur=${(performance.now() - begin).toFixed(1)}`) }
+  }
   const mark = (name: string) => {
     const now = performance.now()
     timings.push(`${name};dur=${(now - stageStarted).toFixed(1)}`)
@@ -88,17 +94,17 @@ Deno.serve(async request => {
       const providerOptions: NonNullable<Parameters<typeof generateText>[0]['providerOptions']> = isGroq ? { groq: { reasoningEffort: 'low' } } : { google: { thinkingConfig: { thinkingLevel: 'minimal' } } }
       return await groundedAnswer({
         sourceCount: documents.length, references: context, attempts: 1,
-        draft: async () => (await generateText({ ...settings, providerOptions, maxOutputTokens: 600,
+        draft: async () => (await measureProvider(`${provider}_draft`, () => generateText({ ...settings, providerOptions, maxOutputTokens: 600,
           system: `${system}\nFINAL ANSWER REQUIREMENTS: Use only explicitly stated facts. Cite every factual paragraph or list item with its supplied source number. Do not describe unprovided implementation steps. Say when requested details are not provided.`,
           messages: turns,
-        })).text,
+        }))).text,
         review: async answer => {
-          const result = await generateText({ ...settings, maxOutputTokens: 1400,
+          const result = await measureProvider(`${provider}_review`, () => generateText({ ...settings, maxOutputTokens: 1400,
             ...(!isGroq ? { output: Output.object({ schema: jsonSchema<{ supported: boolean; issues: string[] }>({ type: 'object', properties: { supported: { type: 'boolean' }, issues: { type: 'array', items: { type: 'string' } } }, required: ['supported', 'issues'], additionalProperties: false }) }) } : {}),
             providerOptions: isGroq ? { groq: { reasoningEffort: 'medium' } } : providerOptions,
             system: groundingReviewSystem,
             prompt: JSON.stringify({ trustedReferences: system, question: turns.at(-1)!.content, draft: answer }),
-          })
+          }))
           return isGroq ? result.text : JSON.stringify(result.output)
         },
       })
@@ -122,8 +128,8 @@ Deno.serve(async request => {
     mark('generation')
     headers['X-Chat-Model'] = modelName
     headers['X-Chat-Fallback'] = reason ?? 'none'
-    headers['Server-Timing'] = timings.join(', ')
-    console.info('portfolio_chat_answer', { requestId, provider, model: modelName, fallback: reason ?? 'none', totalMs: Math.round(performance.now() - started) })
+    headers['Server-Timing'] = [...timings, ...providerTimings].join(', ')
+    console.info('portfolio_chat_answer', { requestId, provider, model: modelName, fallback: reason ?? 'none', totalMs: Math.round(performance.now() - started), providerTimings })
     const stream = createUIMessageStream({
       execute: ({ writer }) => {
         writer.write({ type: 'start' })
@@ -139,7 +145,7 @@ Deno.serve(async request => {
   } catch (error) {
     const known = error instanceof HttpError || error instanceof VerificationError
     const status = known ? error.status : 503
-    headers['Server-Timing'] = [...timings, `${stage};dur=${(performance.now() - stageStarted).toFixed(1)}`].join(', ')
+    headers['Server-Timing'] = [...timings, `${stage};dur=${(performance.now() - stageStarted).toFixed(1)}`, ...providerTimings].join(', ')
     if (error instanceof FallbackFailure) headers['X-Chat-Fallback'] = error.primaryReason
     if (!known) console.error('portfolio_chat_failure', { requestId, stage, durationMs: Math.round(performance.now() - started), ...(error instanceof FallbackFailure ? { primaryReason: error.primaryReason, secondaryReason: error.secondaryReason, secondaryStatus: error.secondaryStatus, secondaryType: error.secondaryType } : {}) })
     return Response.json({ error: known ? error.message : 'The assistant is temporarily unavailable. Please try again later.' }, { status, headers })
