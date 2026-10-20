@@ -25,5 +25,5 @@ test('visitor cancellation never starts fallback',async()=>{
   assert.equal(calls,0)
 })
 test('failure of both providers returns no draft',async()=>{
-  await assert.rejects(reviewedFallback({signal:controller().signal,primary:async()=>{throw new Error('grounding review')},fallback:async()=>{throw new Error('fallback review failed')}}),/fallback review failed/)
+  await assert.rejects(reviewedFallback({signal:controller().signal,primary:async()=>{throw new Error('grounding review')},fallback:async()=>{throw new Error('fallback review failed')}}),error=>error.message==='Both providers failed'&&error.primaryReason==='grounding'&&error.secondaryReason==='provider_failure')
 })

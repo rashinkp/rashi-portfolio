@@ -5,7 +5,7 @@ import { corsHeaders, database, embed, HttpError, readJson, requiredEnv } from '
 import { parseChatInput } from '../_shared/chat-input.ts'
 import { verificationBurstGuard, VerificationError, verifyTurnstile } from '../_shared/turnstile.ts'
 import { buildChatSystem } from '../_shared/chat-prompt.ts'
-import { reviewedFallback } from '../_shared/chat-fallback.ts'
+import { FallbackFailure, reviewedFallback } from '../_shared/chat-fallback.ts'
 import { groundedAnswer, groundingReviewSystem } from '../_shared/grounded-answer.ts'
 import { buildRetrievalQuery, combineChatDocuments, type KnowledgeDocument } from '../_shared/chat-context.ts'
 
@@ -136,7 +136,8 @@ Deno.serve(async request => {
     const known = error instanceof HttpError || error instanceof VerificationError
     const status = known ? error.status : 503
     headers['Server-Timing'] = [...timings, `${stage};dur=${(performance.now() - stageStarted).toFixed(1)}`].join(', ')
-    if (!known) console.error('portfolio_chat_failure', { requestId, stage, durationMs: Math.round(performance.now() - started) })
+    if (error instanceof FallbackFailure) headers['X-Chat-Fallback'] = error.primaryReason
+    if (!known) console.error('portfolio_chat_failure', { requestId, stage, durationMs: Math.round(performance.now() - started), ...(error instanceof FallbackFailure ? { primaryReason: error.primaryReason, secondaryReason: error.secondaryReason } : {}) })
     return Response.json({ error: known ? error.message : 'The assistant is temporarily unavailable. Please try again later.' }, { status, headers })
   }
 })

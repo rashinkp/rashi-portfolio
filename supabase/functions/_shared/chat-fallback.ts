@@ -1,5 +1,15 @@
 export type FallbackReason = 'rate_limit' | 'timeout' | 'grounding' | 'provider_failure'
 
+export class FallbackFailure extends Error {
+  readonly primaryReason: FallbackReason
+  readonly secondaryReason: FallbackReason
+  constructor(primaryReason: FallbackReason, secondaryReason: FallbackReason) {
+    super('Both providers failed')
+    this.primaryReason = primaryReason
+    this.secondaryReason = secondaryReason
+  }
+}
+
 export function fallbackReason(error: unknown): FallbackReason {
   if (error && typeof error === 'object') {
     if ('statusCode' in error && error.statusCode === 429) return 'rate_limit'
@@ -35,6 +45,11 @@ export async function reviewedFallback<T>(options: {
     // second provider call. Only provider/grounding failures trigger fallback.
     options.signal.throwIfAborted()
     const reason = fallbackReason(error)
-    return { value: await bounded(options.fallback, options.signal, options.fallbackTimeout ?? 32000), provider: 'google' as const, reason }
+    try {
+      return { value: await bounded(options.fallback, options.signal, options.fallbackTimeout ?? 32000), provider: 'google' as const, reason }
+    } catch (secondary) {
+      options.signal.throwIfAborted()
+      throw new FallbackFailure(reason, fallbackReason(secondary))
+    }
   }
 }
