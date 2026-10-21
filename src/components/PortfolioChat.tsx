@@ -18,6 +18,7 @@ import { ChatReplyLink } from './ChatReplyLink'
 import { chatProfileLinks } from './chat-link-plugins'
 import { recentChatHistory } from '../../supabase/functions/_shared/chat-input'
 import { readChatSession, saveChatSession } from '../data/chat-session'
+import { useChatViewportHeight } from '../hooks/useChatViewportHeight'
 import { trackEvent } from '../lib/analytics'
 
 const projectUrl = import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/, '')
@@ -51,6 +52,7 @@ function ReplyStatus({ verification, activity, contextReady }: { verification: b
 }
 
 export default function PortfolioChat({ hasArrived = true, isActive = true, onBack }: { hasArrived?: boolean; isActive?: boolean; onBack?: (event: MouseEvent<HTMLElement>) => void }) {
+  const viewportHeight = useChatViewportHeight(isActive)
   const compactWelcome = useMediaQuery('(min-width: 480px) and (max-height: 500px)')
   const [input, setInput] = useState('')
   const [validation, setValidation] = useState('')
@@ -130,7 +132,7 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
   }
 
   return (
-    <VStack as="main" gap={0} height="100dvh" width="100%" className="overflow-hidden bg-surface text-primary font-sans antialiased">
+    <VStack as="main" gap={0} height={viewportHeight ?? '100dvh'} width="100%" className="overflow-hidden bg-surface text-primary font-sans antialiased">
       <HStack as="header" gap={3} paddingInline={4} paddingBlock={2} hAlign="between" vAlign="center" className="shrink-0 border-b border-border">
         <Button label="Back to portfolio" tooltip="Back to portfolio" href="/" onClick={onBack} variant="ghost" className={headerButtonClass}>
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="m12 5-7 7 7 7M5 12h14" /></svg>
