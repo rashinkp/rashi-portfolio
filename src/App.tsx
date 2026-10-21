@@ -53,7 +53,7 @@ function App() {
     const onPopState = () => {
       setJourney(null)
       setIsChatPage(window.location.pathname.replace(/\/$/, '') === '/chat')
-      if (window.location.pathname !== '/chat') { setPortfolioVisited(true); document.title = 'Rashin K P | Full-stack Product Engineer' }
+      if (window.location.pathname !== '/chat') { setPortfolioVisited(true); document.title = 'Rashin KP | Full-stack Product Engineer' }
     }
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
@@ -64,7 +64,7 @@ function App() {
   }, [])
   const arriveAtPortfolio = useCallback(() => {
     if (window.location.pathname !== '/') history.pushState(null, '', '/')
-    document.title = 'Rashin K P | Full-stack Product Engineer'
+    document.title = 'Rashin KP | Full-stack Product Engineer'
     setPortfolioVisited(true)
     setIsChatPage(false)
   }, [])

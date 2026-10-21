@@ -21,7 +21,7 @@ await writeFile(new URL('index.html', output), withTheme.replace(root,
 // Direct chat visits mount the chat app, rather than hydrating the homepage.
 await mkdir(new URL('chat/', output), { recursive: true })
 await writeFile(new URL('chat/index.html', output), withTheme
-  .replace('<title>Rashin K P | Full-stack Product Engineer</title>', '<title>Ask Rashin | Portfolio</title>')
+  .replace('<title>Rashin KP | Full-stack Product Engineer</title>', '<title>Ask Rashin | Portfolio</title>')
   .replace('<link rel="canonical" href="https://rashinkp.vercel.app/" />', '<link rel="canonical" href="https://rashinkp.vercel.app/chat" />')
   .replace('<meta property="og:url" content="https://rashinkp.vercel.app/" />', '<meta property="og:url" content="https://rashinkp.vercel.app/chat" />')
   .replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/g, ''),
