@@ -4,6 +4,22 @@
 export class PreparedVerification {
   private token: { value: string; createdAt: number } | null = null
   private running = false
+  private interactive = false
+  private deadline: ReturnType<typeof setTimeout> | undefined
+
+  // A visible human challenge is waiting for the visitor, not a stalled request.
+  setInteractive(value: boolean) {
+    this.interactive = value
+    this.armDeadline()
+  }
+
+  private armDeadline() {
+    clearTimeout(this.deadline)
+    this.deadline = undefined
+    if (this.pending && !this.interactive) {
+      this.deadline = setTimeout(() => this.fail(new Error('Security check failed. Please retry your message.')), 60000)
+    }
+  }
   private pending: { resolve: (token: string) => void; reject: (error: Error) => void } | null = null
   private readonly execute: () => void
   private readonly reset: () => void
@@ -33,15 +49,16 @@ export class PreparedVerification {
     }
     return new Promise((resolve, reject) => {
       const finish = (token?: string, error?: Error) => {
-        clearTimeout(timeout)
+        clearTimeout(this.deadline)
+        this.deadline = undefined
         signal?.removeEventListener('abort', abort)
         this.pending = null
         if (error) reject(error)
         else resolve(token!)
       }
       const abort = () => this.fail(new DOMException('Cancelled', 'AbortError'))
-      const timeout = setTimeout(() => this.fail(new Error('Security check failed. Please retry your message.')), 60000)
       this.pending = { resolve: token => finish(token), reject: error => finish(undefined, error) }
+      this.armDeadline()
       signal?.addEventListener('abort', abort, { once: true })
       // Reuse a challenge already in flight instead of resetting it on submit.
       if (!this.running) {
@@ -55,10 +72,12 @@ export class PreparedVerification {
 
   succeed(token: string) {
     // Ignore callbacks from a cancelled or disposed challenge.
-    if (!this.running) return
+    if (!this.running) return false
     this.running = false
-    if (this.pending) this.pending.resolve(token)
-    else this.token = { value: token, createdAt: this.now() }
+    this.interactive = false
+    if (this.pending) { this.pending.resolve(token); return 'consumed' as const }
+    this.token = { value: token, createdAt: this.now() }
+    return 'cached' as const
   }
 
   // An idle token expiring is routine, not a failed message. Ignore stale
@@ -70,6 +89,9 @@ export class PreparedVerification {
   }
 
   fail(error: Error) {
+    clearTimeout(this.deadline)
+    this.deadline = undefined
+    this.interactive = false
     this.running = false
     this.token = null
     this.pending?.reject(error)

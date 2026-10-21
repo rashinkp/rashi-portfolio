@@ -17,14 +17,13 @@ const options: TurnstileProps['options'] = {
 }
 const verificationFailed = 'Security check failed. Please retry your message.'
 
-export function ChatVerification({ siteKey, ref, onReadyChange }: { siteKey: string; ref: Ref<ChatVerificationHandle>; onReadyChange: (ready: boolean) => void }) {
+export function ChatVerification({ siteKey, ref, onReadyChange, onInteractionChange }: { siteKey: string; ref: Ref<ChatVerificationHandle>; onReadyChange: (ready: boolean) => void; onInteractionChange: (interactive: boolean) => void }) {
   const widget = useRef<TurnstileInstance | undefined>(undefined)
   const ready = useRef(false)
-  const verifying = useRef(false)
   // Callbacks read the live widget only when a challenge starts or resets.
   // oxlint-disable-next-line react/refs
   const [session] = useState(() => new PreparedVerification(
-    () => { widget.current!.execute() },
+    () => { onReadyChange(false); widget.current!.execute() },
     () => { widget.current?.reset() },
   ))
   // Routine initialization must not add/remove a status row at the animation
@@ -33,14 +32,12 @@ export function ChatVerification({ siteKey, ref, onReadyChange }: { siteKey: str
   const [failed, setFailed] = useState(false)
   const [interactive, setInteractive] = useState(false)
 
-  function fail(message: string, alwaysVisible = false) {
-    onReadyChange(ready.current)
+  function fail(message: string) {
+    onReadyChange(false)
+    onInteractionChange(false)
     setInteractive(false)
-    // An unused background token failing must not look like a failed send.
-    // Discard it quietly; verify() obtains a fresh token when needed.
-    const showFailure = alwaysVisible || verifying.current || interactive
-    setMessage(showFailure ? message : '')
-    setFailed(showFailure)
+    setMessage(message)
+    setFailed(true)
     session.fail(new Error(message))
   }
 
@@ -48,7 +45,6 @@ export function ChatVerification({ siteKey, ref, onReadyChange }: { siteKey: str
     prepare() { if (ready.current) session.prepare() },
     async verify(signal) {
       if (!ready.current || !widget.current) return Promise.reject(new Error('Security check is loading. Please retry shortly.'))
-      verifying.current = true
       setFailed(false)
       setMessage('')
       try {
@@ -56,11 +52,17 @@ export function ChatVerification({ siteKey, ref, onReadyChange }: { siteKey: str
         setMessage('')
         return token
       } catch (error) {
-        setMessage(error instanceof Error && error.name !== 'AbortError' ? error.message : '')
+        const cancelled = error instanceof Error && error.name === 'AbortError'
+        onReadyChange(false)
+        onInteractionChange(false)
+        setInteractive(false)
+        setMessage(!cancelled && error instanceof Error ? error.message : '')
+        setFailed(!cancelled)
+        if (cancelled) session.prepare()
         throw error
-      } finally { verifying.current = false }
+      }
     },
-  }), [session])
+  }), [session, onReadyChange, onInteractionChange])
 
   useEffect(() => {
     const unavailable = () => {
@@ -88,17 +90,17 @@ export function ChatVerification({ siteKey, ref, onReadyChange }: { siteKey: str
   return <VStack gap={1} hAlign="center" width="100%" className="[&>div]:max-w-full">
     <VStack width="100%" className={interactive ? '[&>div]:max-w-full' : 'hidden'}>
       <Turnstile ref={widget} siteKey={siteKey} options={options}
-        onWidgetLoad={() => { ready.current = true; onReadyChange(true); setMessage(''); session.prepare() }}
-        onBeforeInteractive={() => { setInteractive(true); setMessage('Complete the security check to send your message.') }}
-        onAfterInteractive={() => setInteractive(false)}
-        onSuccess={token => { session.succeed(token); setInteractive(false); setMessage(''); setFailed(false); onReadyChange(true) }}
+        onWidgetLoad={() => { ready.current = true; onReadyChange(false); setMessage(''); session.prepare() }}
+        onBeforeInteractive={() => { session.setInteractive(true); onReadyChange(false); onInteractionChange(true); setInteractive(true); setMessage('Click “Verify you are human” to continue.') }}
+        onAfterInteractive={() => { session.setInteractive(false); onInteractionChange(false); setInteractive(false) }}
+        onSuccess={token => { const result = session.succeed(token); if (!result) return; onInteractionChange(false); setInteractive(false); setMessage(''); setFailed(false); onReadyChange(result === 'cached') }}
         onError={() => fail(verificationFailed)}
         onTimeout={() => fail(verificationFailed)}
         onExpire={token => { if (session.expire(token) && document.visibilityState === 'visible') session.prepare() }}
-        onUnsupported={() => { ready.current = false; fail('Your browser does not support the security check. Please try another browser.', true) }}
+        onUnsupported={() => { ready.current = false; fail('Your browser does not support the security check. Please try another browser.') }}
       />
     </VStack>
     {message && <Text role="status" type="supporting" color="secondary" justify="center">{message}</Text>}
-    {failed && <Button label="Retry security check" variant="ghost" size="sm" onClick={() => { setFailed(false); setMessage(''); setInteractive(false); session.prepare() }} />}
+    {failed && <Button label="Retry security check" variant="ghost" size="sm" onClick={() => { setFailed(false); setMessage(''); onReadyChange(false); onInteractionChange(false); setInteractive(false); session.prepare() }} />}
   </VStack>
 }
