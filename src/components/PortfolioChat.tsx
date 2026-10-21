@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } fr
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { Button } from '@astryxdesign/core/Button'
-import { ChatComposer, ChatLayout, ChatMessage, ChatMessageBubble, ChatMessageList } from '@astryxdesign/core/Chat'
+import { ChatComposer, ChatComposerInput, ChatLayout, ChatMessage, ChatMessageBubble, ChatMessageList } from '@astryxdesign/core/Chat'
 import { useMediaQuery } from '@astryxdesign/core/hooks'
 import { Grid } from '@astryxdesign/core/Grid'
 import { Heading } from '@astryxdesign/core/Heading'
@@ -53,6 +53,7 @@ function ReplyStatus({ verification, activity, contextReady }: { verification: b
 
 export default function PortfolioChat({ hasArrived = true, isActive = true, onBack }: { hasArrived?: boolean; isActive?: boolean; onBack?: (event: MouseEvent<HTMLElement>) => void }) {
   const viewportHeight = useChatViewportHeight(isActive)
+  const compactInput = useMediaQuery('(max-width: 767px), (max-height: 500px)')
   const compactWelcome = useMediaQuery('(min-width: 480px) and (max-height: 500px)')
   const [input, setInput] = useState('')
   const [validation, setValidation] = useState('')
@@ -170,6 +171,7 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
                   <Button label="Retry answer" variant="secondary" isDisabled={busy || !verificationReady} onClick={() => { clearError(); void regenerate() }} />
                 </VStack>}
                 <ChatComposer
+                  input={<ChatComposerInput maxRows={compactInput ? 3 : 8} />}
                   className="[&>div:has([contenteditable])]:flex-row! [&>div:has([contenteditable])]:items-center! [&>div:has([contenteditable])]:rounded-2xl! [&>div:has([contenteditable])>div:first-child]:flex-1! [&>div:has([contenteditable])>div:first-child]:min-w-0! [&_.astryx-chat-composer-input]:min-h-8! [&_[contenteditable]]:min-h-8! [&_.astryx-chat-composer-input>[aria-hidden]]:inset-y-0! [&_.astryx-chat-composer-input>[aria-hidden]]:flex! [&_.astryx-chat-composer-input>[aria-hidden]]:items-center!"
                   value={input}
                   onChange={value => { setInput(value); if (validation) setValidation('') }}
