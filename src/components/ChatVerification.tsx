@@ -20,6 +20,7 @@ const verificationFailed = 'Security check failed. Please retry your message.'
 export function ChatVerification({ siteKey, ref, onReadyChange }: { siteKey: string; ref: Ref<ChatVerificationHandle>; onReadyChange: (ready: boolean) => void }) {
   const widget = useRef<TurnstileInstance | undefined>(undefined)
   const ready = useRef(false)
+  const verifying = useRef(false)
   // Callbacks read the live widget only when a challenge starts or resets.
   // oxlint-disable-next-line react/refs
   const [session] = useState(() => new PreparedVerification(
@@ -32,11 +33,14 @@ export function ChatVerification({ siteKey, ref, onReadyChange }: { siteKey: str
   const [failed, setFailed] = useState(false)
   const [interactive, setInteractive] = useState(false)
 
-  function fail(message: string) {
+  function fail(message: string, alwaysVisible = false) {
     onReadyChange(ready.current)
     setInteractive(false)
-    setMessage(message)
-    setFailed(true)
+    // An unused background token failing must not look like a failed send.
+    // Discard it quietly; verify() obtains a fresh token when needed.
+    const showFailure = alwaysVisible || verifying.current || interactive
+    setMessage(showFailure ? message : '')
+    setFailed(showFailure)
     session.fail(new Error(message))
   }
 
@@ -44,6 +48,7 @@ export function ChatVerification({ siteKey, ref, onReadyChange }: { siteKey: str
     prepare() { if (ready.current) session.prepare() },
     async verify(signal) {
       if (!ready.current || !widget.current) return Promise.reject(new Error('Security check is loading. Please retry shortly.'))
+      verifying.current = true
       setFailed(false)
       setMessage('')
       try {
@@ -53,7 +58,7 @@ export function ChatVerification({ siteKey, ref, onReadyChange }: { siteKey: str
       } catch (error) {
         setMessage(error instanceof Error && error.name !== 'AbortError' ? error.message : '')
         throw error
-      }
+      } finally { verifying.current = false }
     },
   }), [session])
 
@@ -90,7 +95,7 @@ export function ChatVerification({ siteKey, ref, onReadyChange }: { siteKey: str
         onError={() => fail(verificationFailed)}
         onTimeout={() => fail(verificationFailed)}
         onExpire={token => { if (session.expire(token) && document.visibilityState === 'visible') session.prepare() }}
-        onUnsupported={() => { ready.current = false; fail('Your browser does not support the security check. Please try another browser.') }}
+        onUnsupported={() => { ready.current = false; fail('Your browser does not support the security check. Please try another browser.', true) }}
       />
     </VStack>
     {message && <Text role="status" type="supporting" color="secondary" justify="center">{message}</Text>}
