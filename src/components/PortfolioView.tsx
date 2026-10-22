@@ -59,7 +59,7 @@ export const PortfolioView = memo(function PortfolioView({ themeMode, onThemeMod
         <Button label="Chat with Rashin’s robot" tooltip="Ask me about Rashin" href="/chat" onClick={openChat} onPointerEnter={preloadChat} onFocus={preloadChat} variant="ghost" className="group h-auto! p-0! rounded-full! bg-transparent! bg-none! hover:bg-transparent! hover:bg-none! transition-transform duration-(--duration-fast-min) ease-out motion-safe:hover:-translate-y-1 motion-safe:active:scale-96 motion-reduce:transition-none">
           <VStack gap={1} hAlign="center">
             <Text weight="bold" className="text-xs! font-heading! text-primary! rounded-full bg-surface px-2 py-1 border border-border shadow-sm">Ask me</Text>
-            <VStack gap={0} hAlign="center" vAlign="center" className="h-16 w-16 sm:h-24 sm:w-24 rounded-full bg-surface border border-border shadow-lg group-hover:shadow-xl transition-shadow duration-(--duration-fast-min) motion-reduce:transition-none">
+            <VStack gap={0} hAlign="center" vAlign="center" className="h-16 w-16 sm:h-24 sm:w-24 drop-shadow-md group-hover:drop-shadow-lg transition-[filter] duration-(--duration-fast-min) motion-reduce:transition-none">
               <RobotPet />
             </VStack>
           </VStack>
