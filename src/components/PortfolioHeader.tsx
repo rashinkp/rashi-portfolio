@@ -7,7 +7,6 @@ import { IconButton } from '@astryxdesign/core/IconButton'
 import { LayoutHeader } from '@astryxdesign/core/Layout'
 import { HStack } from '@astryxdesign/core/Stack'
 import { Text } from '@astryxdesign/core/Text'
-import { useMediaQuery } from '@astryxdesign/core/hooks'
 import { MotionVStack, MotionHStack, noteSpring, spacingToken } from '../lib/motion'
 
 const paths = {
@@ -32,9 +31,8 @@ const destinations = [
 interface PortfolioHeaderProps { themeMode: ThemeMode; onThemeModeChange: (mode: ThemeMode) => void }
 
 export function PortfolioHeader() {
-  const compact = useMediaQuery('(max-width: 639px) and (max-height: 740px)')
   return (
-    <LayoutHeader className={`px-4! md:px-8! ${compact ? 'py-0!' : 'py-4!'}`}>
+    <LayoutHeader className="px-4! md:px-8! py-0! sm:py-4!">
       <HStack as="header" hAlign="between" vAlign="center" gap={3}>
         <Button label="Rashin K P ↗" variant="ghost" href="#top" className="min-h-10!" />
         <Text color="secondary" className="hidden sm:block">A product engineer’s notebook</Text>
