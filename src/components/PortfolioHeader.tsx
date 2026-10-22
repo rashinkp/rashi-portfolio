@@ -32,7 +32,7 @@ interface PortfolioHeaderProps { themeMode: ThemeMode; onThemeModeChange: (mode:
 
 export function PortfolioHeader() {
   return (
-    <LayoutHeader className="hidden! md:flex! px-4! md:px-8! py-0! sm:py-4!">
+    <LayoutHeader className="hidden! md:block! px-4! md:px-8! py-0! sm:py-4!">
       <HStack as="header" hAlign="between" vAlign="center" gap={3}>
         <Button label="Rashin K P ↗" variant="ghost" href="#top" className="min-h-10!" />
         <Text color="secondary" className="hidden sm:block">A product engineer’s notebook</Text>
