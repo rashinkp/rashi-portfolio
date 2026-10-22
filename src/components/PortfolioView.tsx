@@ -51,13 +51,13 @@ export const PortfolioView = memo(function PortfolioView({ themeMode, onThemeMod
         }
       />
       </VStack>
-      <HStack gap={2} vAlign="end" className="fixed bottom-4 left-1/2 -translate-x-1/2 z-60 sm:contents">
+      <HStack gap={2} vAlign="end" className="fixed bottom-4 left-1/2 -translate-x-1/2 -ml-8 z-60 sm:contents">
       <PortfolioDock themeMode={themeMode} onThemeModeChange={onThemeModeChange} />
-      <VStack className="relative z-60 sm:fixed sm:right-8 sm:bottom-4" gap={0}>
+      </HStack>
+      <VStack className="fixed z-60 right-0 bottom-4 sm:right-8" gap={0}>
         <Button label="Chat with Rashin’s robot" tooltip="Ask me about Rashin" href="/chat" onClick={openChat} onPointerEnter={preloadChat} onFocus={preloadChat} variant="ghost" className="group h-auto! p-0! rounded-xl! bg-transparent! bg-none! hover:bg-transparent! hover:bg-none!">
           <RobotPet />
         </Button>
       </VStack>
-      </HStack>
   </>
 })
