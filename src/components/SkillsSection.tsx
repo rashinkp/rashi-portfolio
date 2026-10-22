@@ -26,7 +26,7 @@ export function SkillsSection() {
   return (
     <VStack as="section" id="skills" gap={mobile ? 5 : 4} hAlign="start" className="min-w-0 w-full">
       <Heading level={3} className="text-2xl! text-(--color-text-red)!" data-reveal="toolkit-heading">Tool Kit</Heading>
-      <VStack gap={6} width="100%" maxWidth={408}>
+      <VStack gap={6} width="100%" className="max-w-80">
         {skillGroups.map(group => (
           <VStack as="section" key={group.title} gap={2} width="100%" hAlign="start" aria-label={group.title}>
             <Heading level={4} className="text-base! text-secondary!">{group.title}</Heading>
@@ -39,7 +39,7 @@ export function SkillsSection() {
                     variant="transparent"
                     padding={0.5}
                     elevation="none"
-                    className="group cursor-pointer w-full! max-w-full! aspect-5/4 min-h-16 min-w-0 rounded-lg! border-(length:--focus-outline-width)! border-primary! transition-colors duration-(--duration-medium-min) ease-out hover:bg-inverted! motion-reduce:transition-none"
+                    className="group cursor-pointer w-full! max-w-full! aspect-square min-h-16 min-w-0 rounded-lg! border-(length:--focus-outline-width)! border-primary! transition-colors duration-(--duration-medium-min) ease-out hover:bg-inverted! motion-reduce:transition-none"
                     data-skill-tile={skill}
                     initial={false}
                     whileHover={reduced ? undefined : { scale: 1.06, rotate: index % 2 ? 4 : -4, transition: noteSpring }}
