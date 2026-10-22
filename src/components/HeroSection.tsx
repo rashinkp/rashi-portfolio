@@ -1,80 +1,47 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { Button } from '@astryxdesign/core/Button'
 import { Grid } from '@astryxdesign/core/Grid'
 import { Heading } from '@astryxdesign/core/Heading'
 import { HStack, VStack } from '@astryxdesign/core/Stack'
 import { Text } from '@astryxdesign/core/Text'
-import { useMediaQuery } from '@astryxdesign/core/hooks'
 import { StickyNote } from './StickyNote'
-import { useViewportWidth } from '../hooks/useViewportWidth'
 
 export function HeroSection() {
   const bounds = useRef<HTMLElement>(null)
-  const [heroViewportHeight, setHeroViewportHeight] = useState<number>()
-  useLayoutEffect(() => {
-    const section = bounds.current
-    const scroller = document.querySelector<HTMLElement>('[data-portfolio-scroll]')
-    if (!section || !scroller) return
-    const measure = () => {
-      const offset = Math.max(0, scroller.scrollTop + section.getBoundingClientRect().top - scroller.getBoundingClientRect().top)
-      const available = Math.max(0, scroller.clientHeight - offset)
-      setHeroViewportHeight(previous => previous !== undefined && Math.abs(previous - available) < 1 ? previous : available)
-    }
-    measure()
-    const header = scroller.querySelector('header')
-    const observer = new ResizeObserver(measure)
-    if (header) observer.observe(header)
-    observer.observe(scroller)
-    window.addEventListener('resize', measure)
-    return () => { observer.disconnect(); window.removeEventListener('resize', measure) }
-  }, [])
-  const width = useViewportWidth()
-  const mobile = width > 0 && width < 768
-  const compact = useMediaQuery('(max-width: 767px) and (max-height: 740px)')
-
   const title = (
-    <VStack gap={compact ? 2 : mobile ? 3 : 5} hAlign="center" className={`relative z-10 w-full text-center md:py-24 ${mobile ? 'col-span-2 order-3 py-2' : ''}`}>
-      <Heading level={1} type="display-1" justify="center" className={`${compact ? 'text-2xl!' : 'text-3xl!'} ${mobile ? '' : 'sm:text-4xl! md:text-5xl!'} font-heading!`}>hey, I’m Rashin KP</Heading>
-      <Text weight="bold" justify="center" className={`${compact ? 'text-sm! leading-tight!' : 'text-base!'} ${mobile ? '' : 'sm:text-xl!'} whitespace-pre-line!`}>{mobile ? 'PRODUCT ENGINEER\nBUILDER · DESIGNER' : 'PRODUCT ENGINEER · BUILDER · DESIGNER'}</Text>
+    <VStack gap={3} hAlign="center" className="relative z-10 w-full text-center col-span-2 order-3 py-2 md:order-none md:py-24 md:gap-5">
+      <Heading level={1} type="display-1" justify="center" className="text-2xl! md:text-5xl! font-heading!">hey, I’m Rashin KP</Heading>
+      <Text weight="bold" justify="center" className="text-base! md:text-xl!">PRODUCT ENGINEER<span className="hidden md:inline"> · </span><br className="md:hidden" />BUILDER · DESIGNER</Text>
       <HStack gap={2} wrap="wrap" hAlign="center">
-        <Button label="Explore my work ↗" variant="primary" size={mobile ? "sm" : "lg"} href="#projects" className={`${mobile ? 'min-h-10! px-3! text-sm!' : 'min-h-12!'} rounded-full!`} />
-        <Button label="Say hello" variant="ghost" size={mobile ? "sm" : "lg"} href="#contact" className={mobile ? "min-h-10! px-3! text-sm!" : "min-h-12!"} />
+        <Button label="Explore my work ↗" variant="primary" size="sm" href="#projects" className="min-h-10! px-3! text-sm! md:min-h-12! rounded-full!" />
+        <Button label="Say hello" variant="ghost" size="sm" href="#contact" className="min-h-10! px-3! text-sm! md:min-h-12!" />
       </HStack>
     </VStack>
   )
   const notes = [
-      <StickyNote key={`offrolls-${width}-${compact}`} label="Product and AI at Offrolls" color="green" angle={-4} bounds={bounds} className={`aspect-5/4! p-2! md:p-3! md:absolute md:left-4 md:top-16 md:w-44! ${mobile ? `order-1 justify-self-center ${compact ? 'w-24!' : 'w-28!'}` : ''}`}>
-        <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" className={`${mobile ? 'text-xs!' : 'text-sm!'} md:text-base! whitespace-nowrap`}>Product &amp; AI @</Text><Heading level={2} justify="center" className={`${compact ? 'text-base!' : mobile ? 'text-lg!' : 'text-xl!'} md:text-2xl!`}>Offrolls</Heading></VStack>
-      </StickyNote>,
-      <StickyNote key={`drag-${width}-${compact}`} label="Move these notes" color="pink" angle={3} bounds={bounds} className={`${mobile ? `order-2 justify-self-center p-2! mt-1 ${compact ? 'w-24!' : 'w-28!'}` : 'mt-4'} md:mt-0 md:absolute md:right-6 md:top-12`}>
-        <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" weight="bold" className={`${compact ? 'text-sm!' : mobile ? 'text-base!' : 'text-lg!'} md:text-xl!`}>Drag me 😆</Text></VStack>
-      </StickyNote>,
-      <StickyNote key={`scale-${width}-${compact}`} label="Product craft" color="cyan" angle={-3} bounds={bounds} className={`aspect-4/3! p-2! md:p-4! md:absolute md:right-0 md:bottom-56 md:w-48! ${mobile ? `order-5 justify-self-center ${compact ? 'w-24!' : 'w-28!'}` : ''}`}>
-        <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" weight="bold" textWrap="nowrap" className={`${compact ? 'text-xs!' : mobile ? 'text-sm!' : 'text-base!'} md:text-lg! leading-tight!`}>Big ideas.<br />Fewer clicks.<br />Happy humans.</Text></VStack>
-      </StickyNote>,
-      <StickyNote key={`bca-${width}-${compact}`} label="BCA graduate" color="yellow" angle={4} bounds={bounds} className={`aspect-4/3! ${mobile || compact ? 'mt-0' : 'mt-4'} p-2! md:p-4! md:mt-0 md:absolute md:left-8 md:bottom-36 md:w-48! ${mobile ? `order-4 justify-self-center ${compact ? 'w-24!' : 'w-28!'}` : ''}`}>
-        <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" weight="bold" className={`${compact ? 'text-xs!' : mobile ? 'text-sm!' : 'text-base!'} md:text-xl!`}>BCA graduate</Text><Text justify="center" className={`${mobile ? 'text-xs! leading-tight!' : 'text-sm!'} md:text-base!`}>University of Calicut</Text></VStack>
-      </StickyNote>
+    <StickyNote key="offrolls" label="Product and AI at Offrolls" color="green" angle={-4} bounds={bounds} className="aspect-5/4! p-2! w-28! order-1 justify-self-center md:p-3! md:absolute md:left-4 md:top-16 md:w-44!">
+      <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" className="text-xs! md:text-base! whitespace-nowrap">Product &amp; AI @</Text><Heading level={2} justify="center" className="text-lg! md:text-2xl!">Offrolls</Heading></VStack>
+    </StickyNote>,
+    <StickyNote key="drag" label="Move these notes" color="pink" angle={3} bounds={bounds} className="order-2 justify-self-center p-2! mt-1 w-28! md:mt-0 md:absolute md:right-6 md:top-12 md:w-40!">
+      <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" weight="bold" className="text-base! md:text-xl!">Drag me 😆</Text></VStack>
+    </StickyNote>,
+    <StickyNote key="scale" label="Product craft" color="cyan" angle={-3} bounds={bounds} className="aspect-4/3! p-2! w-28! order-5 justify-self-center md:p-4! md:absolute md:right-0 md:bottom-56 md:w-48!">
+      <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" weight="bold" textWrap="nowrap" className="text-sm! md:text-lg! leading-tight!">Big ideas.<br />Fewer clicks.<br />Happy humans.</Text></VStack>
+    </StickyNote>,
+    <StickyNote key="bca" label="BCA graduate" color="yellow" angle={4} bounds={bounds} className="aspect-4/3! p-2! w-28! order-4 justify-self-center md:p-4! md:mt-0 md:absolute md:left-8 md:bottom-36 md:w-48!">
+      <VStack gap={1} width="100%" hAlign="center" vAlign="center" className="h-full"><Text justify="center" weight="bold" className="text-sm! md:text-xl!">BCA graduate</Text><Text justify="center" className="text-xs! leading-tight! md:text-base!">University of Calicut</Text></VStack>
+    </StickyNote>
   ]
 
   return (
-    <VStack ref={bounds} as="section" aria-label="Introduction" gap={compact ? 4 : mobile ? 6 : 10} vAlign="center" hAlign="center" minHeight={width >= 768 ? 'min(calc(100svh - var(--spacing-10) - var(--spacing-10) - var(--spacing-4)), calc(var(--spacing-10) * 20))' : heroViewportHeight !== undefined ? `${heroViewportHeight}px` : '100svh'} className={`relative isolate min-w-0 pb-24 sm:pt-12 md:pb-12 md:py-24 ${compact ? 'pt-3' : mobile ? 'pt-4' : 'pt-10'}`}>
-      {mobile ? (
-        <Grid columns={2} gap={compact ? 4 : 6} width="100%" align="start">
-          {notes[0]}
-          {notes[1]}
-          {title}
-          {notes[3]}
-          {notes[2]}
-        </Grid>
-      ) : (
-        <>
-          {title}
-          <Grid columns={2} gap={4} width="100%" maxWidth={288} className="items-start md:contents">
-            {notes}
-          </Grid>
-        </>
-      )}
+    <VStack ref={bounds} as="section" aria-label="Introduction" gap={6} vAlign="center" hAlign="center" minHeight="calc(100svh - var(--spacing-10) * 4)" className="relative isolate min-w-0 pb-12 pt-4 md:py-24 md:min-h-svh">
+      <Grid columns={2} gap={6} width="100%" align="start" className="md:contents">
+        {notes[0]}
+        {notes[1]}
+        {title}
+        {notes[3]}
+        {notes[2]}
+      </Grid>
     </VStack>
   )
 }
