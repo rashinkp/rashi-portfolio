@@ -1,14 +1,49 @@
 import { useEffect, useRef } from 'react'
 import { animate } from 'motion/react'
-import { durationToken } from '../lib/motion'
+import { durationToken, spacingToken } from '../lib/motion'
 
 /** A small notebook doodle that doubles as the chat launcher. */
-export function RobotPet({ isChatWelcome = false, greetOnArrival = false, compact = false }: { isChatWelcome?: boolean; greetOnArrival?: boolean; compact?: boolean }) {
+export function RobotPet({ isChatWelcome = false, greetOnArrival = false, compact = false, idleJump = false }: { isChatWelcome?: boolean; greetOnArrival?: boolean; compact?: boolean; idleJump?: boolean }) {
   const faceRef = useRef<SVGSVGElement>(null)
+  const jumpRef = useRef<SVGGElement>(null)
   const pupilsRef = useRef<SVGGElement>(null)
 
   const eyesRef = useRef<SVGGElement>(null)
   const armRef = useRef<SVGGElement>(null)
+
+  useEffect(() => {
+    if (!idleJump) return
+    const preference = matchMedia('(prefers-reduced-motion: reduce)')
+    let jump: ReturnType<typeof animate> | undefined
+    const reset = () => {
+      jump?.stop()
+      jumpRef.current?.removeAttribute('transform')
+    }
+    const timer = setInterval(() => {
+      const svg = faceRef.current
+      if (!svg || document.hidden || preference.matches || svg.closest('[aria-hidden="true"]:not(svg)')) return
+      reset()
+      const height = spacingToken('--spacing-4')
+      jump = animate(0, 1, {
+        duration: durationToken(svg, '--duration-fast-min', 0.15) * 8,
+        ease: 'linear',
+        onUpdate: progress => {
+          // Two complete hops; animate the drawing separately from hover/press.
+          const y = -Math.abs(Math.sin(progress * Math.PI * 2)) * height
+          jumpRef.current?.setAttribute('transform', `translate(0 ${y})`)
+        },
+        onComplete: () => jumpRef.current?.removeAttribute('transform'),
+      })
+    }, 10_000)
+    preference.addEventListener('change', reset)
+    document.addEventListener('visibilitychange', reset)
+    return () => {
+      clearInterval(timer)
+      reset()
+      preference.removeEventListener('change', reset)
+      document.removeEventListener('visibilitychange', reset)
+    }
+  }, [idleJump])
 
   useEffect(() => {
     const svg = faceRef.current
@@ -149,7 +184,7 @@ export function RobotPet({ isChatWelcome = false, greetOnArrival = false, compac
 
   return (
     <svg data-chat-robot={isChatWelcome ? "true" : undefined} ref={faceRef} viewBox="0 0 104 112" fill="none" aria-hidden="true" className={`${compact ? 'h-10 w-10' : 'h-16 w-16 sm:h-24 sm:w-24'} overflow-visible text-accent transition-transform duration-200 origin-bottom motion-safe:group-hover:scale-105 motion-reduce:transition-none`}>
-      <g stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <g ref={jumpRef} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M51 22 52 12M48 10c0-5 8-5 8 0s-8 5-8 0Z" />
         <path d="M27 27c12-3 36-3 49 0 5 1 7 6 7 12l-1 24c0 6-4 9-10 10l-41-1c-7 0-10-4-10-10l1-25c0-5 1-8 5-10Z" className="fill-surface" />
         <path d="M21 42c-10-3-11 17 0 16M83 42c11-2 10 17-1 16" className="fill-surface" />
