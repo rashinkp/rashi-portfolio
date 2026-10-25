@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Button } from '@astryxdesign/core/Button'
 import { Grid } from '@astryxdesign/core/Grid'
 import { VStack } from '@astryxdesign/core/Stack'
@@ -18,6 +18,14 @@ export function ContactSection() {
   const [draftOpened, setDraftOpened] = useState(false)
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
 
+  function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (!(event.target instanceof HTMLTextAreaElement)
+      || event.key !== 'Enter' || event.shiftKey
+      || event.nativeEvent.isComposing || event.keyCode === 229) return
+    event.preventDefault()
+    if (!event.repeat) event.target.form?.requestSubmit()
+  }
+
   function handleSubmit(event: FormEvent<HTMLElement>) {
     event.preventDefault()
     setAttempted(true)
@@ -32,7 +40,7 @@ export function ContactSection() {
   return (
     <VStack as="section" id="contact" gap={5} hAlign="center" className="min-w-0 py-10 md:py-16">
       <SectionTitle>Let’s talk</SectionTitle>
-      <VStack as="form" aria-label="Contact Rashin" onSubmit={handleSubmit} gap={4} maxWidth={mobile ? 408 : 720} paddingInline={mobile ? 2 : 0} data-reveal="contact-form" className="w-full min-w-0 [&_input]:rounded-none [&_textarea]:rounded-xl">
+      <VStack as="form" aria-label="Contact Rashin" onSubmit={handleSubmit} onKeyDown={handleKeyDown} gap={4} maxWidth={mobile ? 408 : 720} paddingInline={mobile ? 2 : 0} data-reveal="contact-form" className="w-full min-w-0 [&_input]:rounded-none [&_textarea]:rounded-xl">
         <Grid columns={2} gap={4} className="grid-cols-1! sm:grid-cols-2!">
           <TextInput label="Your name" placeholder="Your Name" htmlName="name" value={name} onChange={setName} size="lg" className="min-h-12!" isRequired isLabelHidden status={attempted && !name.trim() ? { type: 'error', message: 'Please enter your name.' } : undefined} />
           <TextInput label="Email address" placeholder="Email Address" htmlName="email" type="email" value={email} onChange={setEmail} size="lg" className="min-h-12!" isRequired isLabelHidden status={attempted && !validEmail ? { type: 'error', message: 'Please enter a valid email address.' } : undefined} />
