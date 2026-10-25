@@ -23,12 +23,12 @@ export function ChatVerification({ siteKey, ref, onReadyChange, onInteractionCha
   // Callbacks read the live widget only when a challenge starts or resets.
   // oxlint-disable-next-line react/refs
   const [session] = useState(() => new PreparedVerification(
-    () => { onReadyChange(false); widget.current!.execute() },
+    () => { onReadyChange(false); setFailed(false); setMessage('Checking your browser… You can type while you wait.'); widget.current!.execute() },
     () => { widget.current?.reset() },
+    Date.now,
+    error => { onReadyChange(false); onInteractionChange(false); setInteractive(false); setMessage(error.message); setFailed(true) },
   ))
-  // Routine initialization must not add/remove a status row at the animation
-  // handoff. Explicit verification progress and failures remain visible.
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState('Loading security check… You can type while you wait.')
   const [failed, setFailed] = useState(false)
   const [interactive, setInteractive] = useState(false)
 
@@ -66,7 +66,7 @@ export function ChatVerification({ siteKey, ref, onReadyChange, onInteractionCha
 
   useEffect(() => {
     const unavailable = () => {
-      if (!ready.current) { onReadyChange(false); setMessage('Security check could not load. Reload this page to retry.') }
+      if (!ready.current) { onReadyChange(false); setMessage('Security check could not load. Please retry.'); setFailed(true) }
     }
     const scriptError = (event: Event) => {
       if (event.target instanceof HTMLScriptElement && event.target.id === 'cf-turnstile-script') unavailable()
@@ -88,7 +88,7 @@ export function ChatVerification({ siteKey, ref, onReadyChange, onInteractionCha
   }, [session, onReadyChange])
 
   return <VStack gap={1} hAlign="center" width="100%" className="[&>div]:max-w-full">
-    <VStack width="100%" className={interactive ? '[&>div]:max-w-full' : 'hidden'}>
+    <VStack width="100%" className={interactive ? '[&>div]:max-w-full' : '[&>div]:max-w-full [&>div]:h-0! overflow-hidden'}>
       <Turnstile ref={widget} siteKey={siteKey} options={options}
         onWidgetLoad={() => { ready.current = true; onReadyChange(false); setMessage(''); session.prepare() }}
         onBeforeInteractive={() => { session.setInteractive(true); onReadyChange(false); onInteractionChange(true); setInteractive(true); setMessage('Click “Verify you are human” to continue.') }}
@@ -101,6 +101,6 @@ export function ChatVerification({ siteKey, ref, onReadyChange, onInteractionCha
       />
     </VStack>
     {message && <Text role="status" type="supporting" color="secondary" justify="center">{message}</Text>}
-    {failed && <Button label="Retry security check" variant="ghost" size="sm" onClick={() => { setFailed(false); setMessage(''); onReadyChange(false); onInteractionChange(false); setInteractive(false); session.prepare() }} />}
+    {failed && <Button label="Retry security check" variant="ghost" size="sm" onClick={() => { if (!ready.current) { window.location.reload(); return } setFailed(false); setMessage(''); onReadyChange(false); onInteractionChange(false); setInteractive(false); session.prepare() }} />}
   </VStack>
 }

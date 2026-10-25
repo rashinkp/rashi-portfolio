@@ -168,3 +168,35 @@ test('only an accepted unused success can unlock the next send', async () => {
   await assert.rejects(waiting, error => error.name === 'AbortError')
   assert.equal(session.succeed('cancelled'), false)
 })
+
+
+test('stalled background preparation offers recovery without a submitted message', t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  let runs = 0
+  let stalled = ''
+  const session = new PreparedVerification(() => runs++, () => {}, Date.now, error => { stalled = error.message })
+  session.prepare()
+  t.mock.timers.tick(30000)
+  assert.match(stalled, /taking too long/)
+  assert.equal(session.succeed('late'), false)
+  session.prepare()
+  assert.equal(runs, 2)
+  session.succeed('fresh')
+  t.mock.timers.tick(60000)
+  assert.equal(stalled, 'Security check is taking too long. Please retry the check.')
+  session.dispose()
+})
+
+test('background human interaction waits for the visitor instead of timing out', t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  let stalls = 0
+  const session = new PreparedVerification(() => {}, () => {}, Date.now, () => stalls++)
+  session.prepare()
+  session.setInteractive(true)
+  t.mock.timers.tick(120000)
+  assert.equal(stalls, 0)
+  session.setInteractive(false)
+  t.mock.timers.tick(30000)
+  assert.equal(stalls, 1)
+  session.dispose()
+})

@@ -16,25 +16,32 @@ export class PreparedVerification {
   private armDeadline() {
     clearTimeout(this.deadline)
     this.deadline = undefined
-    if (this.pending && !this.interactive) {
-      this.deadline = setTimeout(() => this.fail(new Error('Security check failed. Please retry your message.')), 60000)
+    if (this.running && !this.interactive) {
+      this.deadline = setTimeout(() => {
+        const error = new Error(this.pending ? 'Security check failed. Please retry your message.' : 'Security check is taking too long. Please retry the check.')
+        this.fail(error)
+        this.onStall(error)
+      }, this.pending ? 60000 : 30000)
     }
   }
   private pending: { resolve: (token: string) => void; reject: (error: Error) => void } | null = null
   private readonly execute: () => void
   private readonly reset: () => void
+  private readonly onStall: (error: Error) => void
   private readonly now: () => number
 
   constructor(
     execute: () => void,
     reset: () => void,
     now: () => number = Date.now,
-  ) { this.execute = execute; this.reset = reset; this.now = now }
+    onStall: (error: Error) => void = () => {},
+  ) { this.execute = execute; this.reset = reset; this.now = now; this.onStall = onStall }
 
   prepare() {
     if (this.running || this.pending || (this.token && this.now() - this.token.createdAt < 240000)) return
     this.token = null
     this.running = true
+    this.armDeadline()
     try { this.reset(); this.execute() }
     catch { this.fail(new Error('Security check failed. Please retry your message.')) }
   }
@@ -64,6 +71,7 @@ export class PreparedVerification {
       if (!this.running) {
         this.token = null
         this.running = true
+        this.armDeadline()
         try { this.reset(); this.execute() }
         catch { this.fail(new Error('Security check failed. Please retry your message.')) }
       }
@@ -73,6 +81,8 @@ export class PreparedVerification {
   succeed(token: string) {
     // Ignore callbacks from a cancelled or disposed challenge.
     if (!this.running) return false
+    clearTimeout(this.deadline)
+    this.deadline = undefined
     this.running = false
     this.interactive = false
     if (this.pending) { this.pending.resolve(token); return 'consumed' as const }

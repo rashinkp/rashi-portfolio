@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } fr
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { Button } from '@astryxdesign/core/Button'
-import { ChatComposer, ChatComposerInput, ChatLayout, ChatMessage, ChatMessageBubble, ChatMessageList } from '@astryxdesign/core/Chat'
+import { ChatComposer, ChatComposerInput, ChatSendButton, ChatLayout, ChatMessage, ChatMessageBubble, ChatMessageList } from '@astryxdesign/core/Chat'
 import { useMediaQuery } from '@astryxdesign/core/hooks'
 import { Grid } from '@astryxdesign/core/Grid'
 import { Heading } from '@astryxdesign/core/Heading'
@@ -57,7 +57,15 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
   const viewportHeight = useChatViewportHeight(isActive)
   const compactInput = useMediaQuery('(max-width: 767px), (max-height: 500px)')
   const compactWelcome = useMediaQuery('(min-width: 480px) and (max-height: 500px)')
-  const [input, setInput] = useState('')
+  const [input, setInput] = useState(() => {
+    try { return sessionStorage.getItem('portfolio-chat-draft') ?? '' } catch { return '' }
+  })
+  useEffect(() => {
+    try {
+      if (input) sessionStorage.setItem('portfolio-chat-draft', input)
+      else sessionStorage.removeItem('portfolio-chat-draft')
+    } catch { /* Typing still works when browser storage is unavailable. */ }
+  }, [input])
   const [validation, setValidation] = useState('')
   const [verificationReady, setVerificationReady] = useState(false)
   const [needsVerificationInteraction, setNeedsVerificationInteraction] = useState(false)
@@ -178,15 +186,19 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
                   <Button label="Retry answer" variant="secondary" isDisabled={busy || !verificationReady} onClick={() => { clearError(); void regenerate() }} />
                 </VStack>}
                 <ChatComposer
-                  input={<ChatComposerInput maxRows={compactInput ? 3 : 8} />}
+                  input={<ChatComposerInput maxRows={compactInput ? 3 : 8} onKeyDown={event => {
+                    // The composer clears text after Enter even when submit refuses it.
+                    if (!verificationReady && event.key === 'Enter' && !event.shiftKey) event.preventDefault()
+                  }} />}
                   className="[&>div:has([contenteditable])]:flex-row! [&>div:has([contenteditable])]:items-center! [&>div:has([contenteditable])]:rounded-2xl! [&>div:has([contenteditable])>div:first-child]:flex-1! [&>div:has([contenteditable])>div:first-child]:min-w-0! [&_.astryx-chat-composer-input]:min-h-8! [&_[contenteditable]]:min-h-8! [&_.astryx-chat-composer-input>[aria-hidden]]:inset-y-0! [&_.astryx-chat-composer-input>[aria-hidden]]:flex! [&_.astryx-chat-composer-input>[aria-hidden]]:items-center!"
                   value={input}
                   onChange={value => { setInput(value); if (validation) setValidation('') }}
                   onSubmit={submit}
                   onStop={() => { void stop() }}
                   isStopShown={busy}
-                  isDisabled={!configured || !verificationReady || busy}
-                  placeholder={!configured ? 'The assistant will be available soon…' : !verificationReady ? 'Complete the security check to chat…' : 'Ask a question…'}
+                  sendButton={<ChatSendButton isDisabled={!configured || !verificationReady || busy || !input.trim()} />}
+                  isDisabled={!configured || busy}
+                  placeholder={!configured ? 'The assistant will be available soon…' : 'Ask a question…'}
                   status={validation ? { type: 'error', message: validation } : undefined}
                   elevation="none"
                   density="compact"
