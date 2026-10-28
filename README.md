@@ -30,6 +30,13 @@ Personal portfolio for Rashin K P, a full-stack developer focused on the MERN st
 
 ## Featured projects
 
+### focusebuddy
+
+A personal focus and wellness companion with work session timers, water tracking, movement breaks, and date-range activity history. Built with React and TypeScript, with activity stored locally on the user’s device.
+
+- [Live application](https://focusebuddy.vercel.app/)
+- [Source code](https://github.com/rashinkp/focusebuddy)
+
 ### ByWay
 
 A multi-role learning platform with tutor onboarding, OAuth, Stripe payments, real-time chat, notifications, and certificates.
