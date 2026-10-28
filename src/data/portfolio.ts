@@ -9,6 +9,18 @@ export const skillGroups = [
 
 export const featuredProjects = [
   {
+    name: 'focusebuddy',
+    type: 'Focus & wellness companion',
+    description:
+      'Focused work sessions, water tracking, and movement breaks, with activity stored on your device.',
+    highlights: ['Timestamp-based timers with refresh recovery', 'Date-range history and coordinated browser tabs', 'Keyboard-friendly controls and reduced-motion support'],
+    stack: ['React', 'TypeScript', 'Vite', 'Tailwind CSS', 'Vitest'],
+    image: '/projects/focusebuddy-preview.png',
+    imageAlt: 'focusebuddy dashboard with a work session timer, water tracking, and daily activity',
+    live: 'https://focusebuddy.vercel.app/',
+    github: 'https://github.com/rashinkp/focusebuddy',
+  },
+  {
     name: 'ByWay',
     type: 'Learning platform',
     description:
