@@ -2,6 +2,10 @@
 
 Personal portfolio for Rashin K P, a full-stack developer focused on the MERN stack. It presents my professional experience, technical skills, education, and selected projects in a responsive interface with light and dark themes.
 
+[Visit the live portfolio](https://rashinkp.vercel.app/)
+
+![Rashin’s portfolio homepage with notebook-style notes and project navigation](docs/images/portfolio-preview.png)
+
 ## Features
 
 - Professional experience at Offrolls
