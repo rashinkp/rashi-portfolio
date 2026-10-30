@@ -1,7 +1,7 @@
 export const skillGroups = [
   { title: 'Design & AI tools', skills: ['Codex', 'Cursor', 'Claude', 'Figma'] },
   { title: 'Frontend', skills: ['JavaScript', 'TypeScript', 'React', 'Next.js'] },
-  { title: 'Backend & data', skills: ['Node.js', 'Express', 'NestJS', 'PostgreSQL', 'MySQL'] },
+  { title: 'Backend & data', skills: ['Node.js', 'Express', 'NestJS', 'PostgreSQL', 'MySQL', 'Supabase'] },
   { title: 'AI & integrations', skills: ['Gemini', 'Langfuse', 'Recall.ai', 'WhatsApp API', 'Razorpay', 'Stripe', 'Google APIs', 'Microsoft Calendar'] },
   { title: 'Testing & insights', skills: ['Sentry', 'PostHog', 'Vitest', 'Playwright'] },
   { title: 'Deploy & workflow', skills: ['AWS', 'OCI', 'Cloudflare', 'Railway', 'Vercel', 'Docker', 'Git', 'GitHub Actions'] },

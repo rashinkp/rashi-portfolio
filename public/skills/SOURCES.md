@@ -11,6 +11,8 @@ Downloaded SVG assets served locally by the portfolio.
 
 Brand names and logos belong to their respective owners.
 
+- Supabase: [Devicon original SVG](https://github.com/devicons/devicon/blob/master/icons/supabase/supabase-original.svg), under the included MIT license.
+
 - Sentry, PostHog, WhatsApp, Razorpay, and Stripe: [Simple Icons](https://github.com/simple-icons/simple-icons/tree/develop/icons), under CC0.
 - Langfuse: official [Langfuse touch icon](https://langfuse.com/apple-touch-icon.png).
 - Recall.ai: official [Recall.ai site icon](https://cdn.prod.website-files.com/620d732b1f1f7b244ac89f0e/620d732c1f1f7ba1edc89f35_Favicon%20256.png).

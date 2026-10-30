@@ -22,6 +22,7 @@ export const skillLogos: Record<string, { file: string; extension?: 'png'; monoc
   'Next.js': { file: 'nextjs', monochrome: true },
   TypeScript: { file: 'typescript' },
   PostgreSQL: { file: 'postgresql' },
+  Supabase: { file: 'supabase' },
   'GitHub Actions': { file: 'githubactions' },
   'Tailwind CSS': { file: 'tailwindcss' },
   'Node.js': { file: 'nodejs' },
