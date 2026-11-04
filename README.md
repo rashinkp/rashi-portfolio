@@ -1,6 +1,6 @@
-# Rashin K P | Developer Portfolio
+# Rashin KP | Developer Portfolio
 
-Personal portfolio for Rashin K P, a full-stack developer focused on the MERN stack. It presents my professional experience, technical skills, education, and selected projects in a responsive interface with light and dark themes.
+Personal portfolio for Rashin KP, a full-stack developer focused on the MERN stack. It presents my professional experience, technical skills, education, and selected projects in a responsive interface with light and dark themes.
 
 [Visit the live portfolio](https://rashinkp.vercel.app/)
 

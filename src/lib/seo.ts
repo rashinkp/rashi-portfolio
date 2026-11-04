@@ -3,7 +3,7 @@ export const siteUrl = 'https://rashinkp.vercel.app'
 export const routeMetadata = {
   home: {
     title: 'Rashin KP | Full-stack Product Engineer',
-    description: 'Rashin K P, full-stack product engineer building AI-powered hiring workflows. Explore product modernization, reusable interfaces, and integrations at Offrolls.',
+    description: 'Rashin KP, full-stack product engineer building AI-powered hiring workflows. Explore product modernization, reusable interfaces, and integrations at Offrolls.',
     url: `${siteUrl}/`,
     robots: 'index, follow',
   },

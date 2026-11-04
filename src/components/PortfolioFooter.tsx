@@ -16,7 +16,7 @@ export function PortfolioFooter() {
       paddingBlock={mobile ? 4 : 6}
       className={`min-w-0 ${mobile ? 'flex-col! text-center' : 'text-left'}`}
     >
-      <Text type="supporting">Rashin K P · Full-stack Product Engineer</Text>
+      <Text type="supporting">Rashin KP · Full-stack Product Engineer</Text>
       <Button className="min-h-10!" label="Back to top" variant="ghost" size="sm" href="#top" />
     </HStack>
   )
