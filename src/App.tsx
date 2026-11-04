@@ -10,6 +10,7 @@ import { ChatJourney } from './components/ChatJourney'
 import { prepareChatJourney } from './lib/journeyPreparation'
 import type { Point } from './lib/chatJourney'
 import { trackPage } from './lib/analytics'
+import { updateRouteMetadata } from './lib/seo'
 import { useSmoothAnchors } from './hooks/useSmoothAnchors'
 import { useThemeMode } from './hooks/useThemeMode'
 import { useInitialAnchor } from './hooks/useInitialAnchor'
@@ -21,24 +22,13 @@ function App() {
   const { themeMode, onThemeModeChange } = useThemeMode()
   const [isChatPage, setIsChatPage] = useState(() => typeof window !== 'undefined' && window.location.pathname.replace(/\/$/, '') === '/chat')
   useEffect(() => { trackPage(isChatPage ? '/chat' : '/') }, [isChatPage])
+  useEffect(() => { updateRouteMetadata(isChatPage) }, [isChatPage])
   const [chatPrepared, setChatPrepared] = useState(isChatPage)
   const [portfolioVisited, setPortfolioVisited] = useState(!isChatPage)
   const [journey, setJourney] = useState<Point | null>(null)
   const [returning, setReturning] = useState(false)
   const reducedMotion = useReducedMotion()
   const [sceneDuration] = useState(() => durationToken(globalThis.document?.documentElement, '--duration-medium-min', 0.31))
-  // Warm the lazy chat chunk while the portfolio is idle, before a mobile tap
-  // starts the animation (touch screens do not get the hover preload).
-  useEffect(() => {
-    if (isChatPage) return
-    const preload = () => { prepareChatJourney(); void loadChat().then(() => startTransition(() => setChatPrepared(true))).catch(() => {}) }
-    if ('requestIdleCallback' in window) {
-      const idle = requestIdleCallback(preload, { timeout: 2000 })
-      return () => cancelIdleCallback(idle)
-    }
-    const timer = setTimeout(preload, 1000)
-    return () => clearTimeout(timer)
-  }, [isChatPage])
   useEffect(() => {
     if (portfolioVisited) return
     const prepare = () => { prepareChatJourney(); setPortfolioVisited(true) }
@@ -53,7 +43,7 @@ function App() {
     const onPopState = () => {
       setJourney(null)
       setIsChatPage(window.location.pathname.replace(/\/$/, '') === '/chat')
-      if (window.location.pathname !== '/chat') { setPortfolioVisited(true); document.title = 'Rashin KP | Full-stack Product Engineer' }
+      if (window.location.pathname.replace(/\/$/, '') !== '/chat') setPortfolioVisited(true)
     }
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
@@ -64,7 +54,6 @@ function App() {
   }, [])
   const arriveAtPortfolio = useCallback(() => {
     if (window.location.pathname !== '/') history.pushState(null, '', '/')
-    document.title = 'Rashin KP | Full-stack Product Engineer'
     setPortfolioVisited(true)
     setIsChatPage(false)
   }, [])
@@ -79,7 +68,9 @@ function App() {
   }, [])
   const skipJourney = useCallback(() => { arriveAtChat(); completeJourney() }, [arriveAtChat, completeJourney])
   const skipReturn = useCallback(() => { arriveAtPortfolio(); completeJourney() }, [arriveAtPortfolio, completeJourney])
-  const preloadChat = useCallback(() => { void loadChat().then(() => startTransition(() => setChatPrepared(true))).catch(() => {}) }, [])
+  // Fetch and mount chat only on intent, rather than on every homepage visit.
+  // Pointer-down starts the download early on touchscreens as well as desktop.
+  const preloadChat = useCallback(() => { prepareChatJourney(); void loadChat().then(() => startTransition(() => setChatPrepared(true))).catch(() => {}) }, [])
   const openChat = useCallback((event: MouseEvent<HTMLElement>) => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
     event.preventDefault()

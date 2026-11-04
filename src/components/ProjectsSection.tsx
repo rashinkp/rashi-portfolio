@@ -22,7 +22,7 @@ export function ProjectsSection() {
             <MotionCard variant="transparent" padding={mobile ? 2 : 3} elevation="none" className="w-full min-w-0 rounded-lg! border-(length:--focus-outline-width)! border-secondary/60!" whileHover={reduced ? undefined : { y: -spacingToken('--spacing-1') }} transition={noteSpring}>
               <Grid columns={{ minWidth: 220, max: 2, repeat: 'fit' }} gap={mobile ? 3 : 4} align="center">
                 <AspectRatio ratio={mobile ? 12 / 5 : 16 / 10} fit="cover">
-                  <img src={project.image} alt={project.imageAlt} loading="lazy" data-project-image className="w-full h-full object-cover rounded-md" />
+                  <img src={project.image} alt={project.imageAlt} width={project.imageWidth} height={project.imageHeight} loading="lazy" decoding="async" data-project-image className="w-full h-full object-cover rounded-md" />
                 </AspectRatio>
                 <VStack gap={mobile ? 1 : 2} hAlign="start" className="min-w-0">
                   <Text type="supporting" color="accent">{project.type} · Learning project</Text>

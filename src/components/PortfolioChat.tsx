@@ -73,7 +73,6 @@ export default function PortfolioChat({ hasArrived = true, isActive = true, onBa
   const [savedMessages] = useState(readChatSession)
   const verification = useRef<ChatVerificationHandle>(null)
   const needsNextVerification = useRef(false)
-  useEffect(() => { if (isActive) document.title = 'Ask Rashin | Portfolio' }, [isActive])
   useEffect(() => {
     if (hasArrived) document.querySelector<HTMLElement>('[data-chat-heading]')?.focus({ preventScroll: true })
   }, [hasArrived])

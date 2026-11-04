@@ -98,7 +98,11 @@ The interface uses ASTRYX components and the neutral theme. Layout, spacing, col
 
 ## Social sharing
 
-Open Graph and Twitter summary metadata are included in `index.html`. Once the public deployment URL is confirmed, add its canonical URL and `og:url`. A hosted preview image can then be added with an absolute URL.
+The production URL is `https://rashinkp.vercel.app/`. Open Graph and Twitter large-image cards use `public/social-preview.jpg` (1200 × 630). The homepage is prerendered with a canonical URL, profile structured data, robots.txt, and a sitemap.
+
+The `/chat` page has its own metadata and `noindex, follow` in its HTML and Vercel response headers. It stays crawlable so search engines can read that instruction and is excluded from the sitemap. Metadata also updates during client-side navigation. Run `npm run build && npm run test:prerender` to check the deployment output.
+
+Fonts are self-hosted under `public/fonts/` with their licenses. Project thumbnails use WebP assets; the original PNGs are retained. Chat loads on pointer, keyboard, or click intent rather than automatically during homepage idle time.
 
 ## Contact
 

@@ -1,4 +1,9 @@
 {
+  "headers": [
+    { "source": "/chat", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }] },
+    { "source": "/chat/", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }] },
+    { "source": "/chat/index.html", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }] }
+  ],
   "rewrites": [
     { "source": "/chat", "destination": "/chat/index.html" },
     { "source": "/chat/", "destination": "/chat/index.html" }

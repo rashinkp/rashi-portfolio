@@ -16,13 +16,20 @@
         root.classList.add(`scheme-${mode}`);
       })();
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Solway:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="preload" href="/fonts/solway-latin-700.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/gaegu-latin-400.woff2" as="font" type="font/woff2" crossorigin />
+    <style>
+      /* Font resources only; typography and appearance remain in the theme. */
+      @font-face { font-family: Gaegu; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/gaegu-latin-400.woff2') format('woff2'); }
+      @font-face { font-family: Gaegu; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/gaegu-latin-700.woff2') format('woff2'); }
+      @font-face { font-family: Solway; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/solway-latin-400.woff2') format('woff2'); }
+      @font-face { font-family: Solway; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/solway-latin-700.woff2') format('woff2'); }
+    </style>
     <link rel="icon" type="image/png" sizes="96x96" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Rashin K P, full-stack product engineer building AI-powered hiring workflows. Explore product modernization, reusable interfaces, and integrations at Offrolls." />
     <meta name="author" content="Rashin K P" />
+    <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://rashinkp.vercel.app/" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://rashinkp.vercel.app/" />
@@ -30,7 +37,14 @@
     <meta property="og:site_name" content="Rashin KP" />
     <meta property="og:title" content="Rashin KP | Full-stack Product Engineer" />
     <meta property="og:description" content="Building AI-powered hiring workflows. Explore product modernization, reusable interfaces, and integrations at Offrolls." />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="https://rashinkp.vercel.app/social-preview.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:alt" content="Rashin KP, Full-stack Product Engineer. Product, AI, and Design on a notebook-style portfolio." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://rashinkp.vercel.app/social-preview.jpg" />
+    <meta name="twitter:image:alt" content="Rashin KP, Full-stack Product Engineer. Product, AI, and Design on a notebook-style portfolio." />
     <meta name="twitter:title" content="Rashin KP | Full-stack Product Engineer" />
     <meta name="twitter:description" content="Building AI-powered hiring workflows. Explore product modernization, reusable interfaces, and integrations at Offrolls." />
     <title>Rashin KP | Full-stack Product Engineer</title>

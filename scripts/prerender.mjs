@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { render } from '../dist-ssr/entry-server.js'
+import { routeMetadata } from '../src/lib/seo.ts'
 
 const output = new URL('../dist/', import.meta.url)
 const template = await readFile(new URL('index.html', output), 'utf8')
@@ -20,10 +21,15 @@ await writeFile(new URL('index.html', output), withTheme.replace(root,
 
 // Direct chat visits mount the chat app, rather than hydrating the homepage.
 await mkdir(new URL('chat/', output), { recursive: true })
+const chat = routeMetadata.chat
 await writeFile(new URL('chat/index.html', output), withTheme
-  .replace('<title>Rashin KP | Full-stack Product Engineer</title>', '<title>Ask Rashin | Portfolio</title>')
-  .replace('<link rel="canonical" href="https://rashinkp.vercel.app/" />', '<link rel="canonical" href="https://rashinkp.vercel.app/chat" />')
-  .replace('<meta property="og:url" content="https://rashinkp.vercel.app/" />', '<meta property="og:url" content="https://rashinkp.vercel.app/chat" />')
+  .replace(/<title>[^<]*<\/title>/, `<title>${chat.title}</title>`)
+  .replace(/(<link rel="canonical" href=")[^"]+/, `$1${chat.url}`)
+  .replace(/(<meta name="robots" content=")[^"]+/, `$1${chat.robots}`)
+  .replace(/(<meta name="description" content=")[^"]+/, `$1${chat.description}`)
+  .replace(/(<meta property="og:url" content=")[^"]+/, `$1${chat.url}`)
+  .replace(/(<meta (?:property="og:title"|name="twitter:title") content=")[^"]+/g, `$1${chat.title}`)
+  .replace(/(<meta (?:property="og:description"|name="twitter:description") content=")[^"]+/g, `$1${chat.description}`)
   .replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/g, ''),
 )
 console.log('Pre-rendered portfolio and emitted the chat app shell.')
