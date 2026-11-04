@@ -1,6 +1,6 @@
 # SEO and mobile performance
 
-Checked on 4 November 2026. These changes are prepared in the repository and have not been deployed.
+Deployed and checked on 4 November 2026 at `https://rashinkp.vercel.app/`. Vercel marked commit `7be1426` Ready, Production, and Current.
 
 The homepage has prerendered content, a self-referencing canonical, profile structured data, a sitemap, and robots.txt. Open Graph and Twitter cards now share `public/social-preview.jpg`, a 1200 × 630 JPEG. The chat page has its own title and description, plus `noindex, follow` in the generated HTML. Vercel configuration adds the same instruction as an `X-Robots-Tag` header for `/chat`, `/chat/`, and `/chat/index.html`.
 
@@ -23,6 +23,10 @@ Lighthouse 13.6.0, mobile preset, simulated throttling, clean headless Chrome ru
 
 Local scores are lab results, not deployed Core Web Vitals. Hosting latency, device speed, cache state, and network conditions affect results. Rerun against production after deployment.
 
+The post-deployment mobile Lighthouse run scored **92 for performance and 100 for SEO**, compared with **75 and 100** before deployment. Live Largest Contentful Paint improved from 4.3 s to 2.5 s; measured transfer fell from 5,188 KB to 423 KB. Total Blocking Time was 60 ms and Cumulative Layout Shift was 0. These are lab measurements, not real-user Core Web Vitals.
+
+Live checks confirmed the homepage remains indexable and prerendered; `/chat`, `/chat/`, and `/chat/index.html` return `noindex, follow` in both HTML and response headers. The social JPEG, local WOFF2 fonts, WebP thumbnails, robots.txt, and sitemap all return 200. Structured data is present, the idle homepage does not request the chat chunk, and the 390-pixel mobile viewport has no horizontal overflow. Opening chat applies its own title, canonical, and noindex metadata.
+
 The three project screenshots now total 74 KB instead of 4.67 MB. WebP copies are resized to a maximum width of 960, with the source PNGs retained. Their intrinsic dimensions are specified and the existing aspect-ratio containers reserve layout space. Images remain lazy-loaded and decode asynchronously.
 
 Gaegu and Solway use local Latin WOFF2 files with `font-display: swap`; the original font families stay in the theme. The heading and regular body faces are preloaded. Font licenses are in `public/fonts/`. Characters outside the Latin subset use the existing fallback font stacks. This removes the blocking Google Fonts stylesheet and extra remote font connections.
@@ -41,12 +45,11 @@ To reproduce the mobile audit after building and starting `npm run preview`:
 npx --yes lighthouse@13.6.0 http://localhost:4173/ --only-categories=performance,seo --output=json --output-path=/tmp/portfolio-mobile.json --chrome-flags='--headless --no-sandbox'
 ```
 
-After deployment:
+Remaining account-level follow-up:
 
-1. Confirm the homepage and social image load, and `/chat` has both its noindex HTML and response header.
-2. Confirm ownership in Google Search Console, submit `https://rashinkp.vercel.app/sitemap.xml`, and inspect the homepage URL. A verification file alone does not confirm ownership or indexing.
-3. Check Page Indexing and Core Web Vitals in Search Console. The live account reports were not accessible during this audit.
-4. Refresh cached link previews on sharing platforms if they still show the older card.
+1. Confirm ownership in Google Search Console, submit `https://rashinkp.vercel.app/sitemap.xml`, and inspect the homepage URL. A verification file alone does not confirm ownership or indexing.
+2. Check Page Indexing and Core Web Vitals in Search Console. The live account reports were not accessible during this audit.
+3. Refresh cached link previews on sharing platforms if they still show the older card.
 
 Separate project case studies remain a useful future content improvement. They need substantive project details and are outside this technical SEO update.
 
