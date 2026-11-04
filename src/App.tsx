@@ -1,3 +1,4 @@
+import { NotFoundPage } from './components/NotFoundPage'
 import { Text } from '@astryxdesign/core/Text'
 import { lazy, memo, startTransition, Suspense, useCallback, useEffect, useState, type MouseEvent } from 'react'
 import { VStack } from '@astryxdesign/core/Stack'
@@ -18,11 +19,14 @@ import { useInitialAnchor } from './hooks/useInitialAnchor'
 const loadChat = () => import('./components/PortfolioChat')
 const PortfolioChat = memo(lazy(loadChat))
 
-function App() {
+function App({ initialPath = '/' }: { initialPath?: string }) {
   const { themeMode, onThemeModeChange } = useThemeMode()
-  const [isChatPage, setIsChatPage] = useState(() => typeof window !== 'undefined' && window.location.pathname.replace(/\/$/, '') === '/chat')
-  useEffect(() => { trackPage(isChatPage ? '/chat' : '/') }, [isChatPage])
-  useEffect(() => { updateRouteMetadata(isChatPage) }, [isChatPage])
+  const [pathname, setPathname] = useState(() => typeof window !== 'undefined' ? window.location.pathname : initialPath)
+  const normalizedPath = pathname.replace(/\/$/, '') || '/'
+  const isChatPage = normalizedPath === '/chat'
+  const isNotFound = normalizedPath !== '/' && !isChatPage
+  useEffect(() => { trackPage(pathname) }, [pathname])
+  useEffect(() => { updateRouteMetadata(isChatPage, isNotFound) }, [isChatPage, isNotFound])
   const [chatPrepared, setChatPrepared] = useState(isChatPage)
   const [portfolioVisited, setPortfolioVisited] = useState(!isChatPage)
   const [journey, setJourney] = useState<Point | null>(null)
@@ -42,7 +46,7 @@ function App() {
   useEffect(() => {
     const onPopState = () => {
       setJourney(null)
-      setIsChatPage(window.location.pathname.replace(/\/$/, '') === '/chat')
+      setPathname(window.location.pathname)
       if (window.location.pathname.replace(/\/$/, '') !== '/chat') setPortfolioVisited(true)
     }
     window.addEventListener('popstate', onPopState)
@@ -50,12 +54,12 @@ function App() {
   }, [])
   const arriveAtChat = useCallback(() => {
     if (window.location.pathname !== '/chat') history.pushState(null, '', '/chat')
-    setIsChatPage(true)
+    setPathname('/chat')
   }, [])
   const arriveAtPortfolio = useCallback(() => {
     if (window.location.pathname !== '/') history.pushState(null, '', '/')
     setPortfolioVisited(true)
-    setIsChatPage(false)
+    setPathname('/')
   }, [])
   const completeJourney = useCallback(() => {
     setJourney(null)
@@ -97,6 +101,7 @@ function App() {
   return (
     <Theme theme={notebookTheme} mode={themeMode}>
       <MotionConfig reducedMotion="user">
+      {isNotFound ? <NotFoundPage /> : <>
       <VStack gap={0} width="100%" height="100dvh" className="overflow-hidden scheme-light in-data-[color-mode=dark]:scheme-dark">
       <MotionVStack data-journey-scene="true" gap={0} className="relative h-dvh w-full min-h-0 overflow-hidden" inert={Boolean(journey)} aria-busy={Boolean(journey)} initial={false} animate={{ opacity: journey && (returning ? isChatPage : !isChatPage) ? 0.15 : 1 }} transition={{ duration: reducedMotion ? 0 : sceneDuration }}>
       {(chatPrepared || isChatPage) && (
@@ -108,6 +113,7 @@ function App() {
       </MotionVStack>
       </VStack>
       {journey && <ChatJourney origin={journey} returning={returning} onArrive={returning ? arriveAtPortfolio : arriveAtChat} onComplete={completeJourney} onCancel={returning ? skipReturn : skipJourney} />}
+      </>}
       </MotionConfig>
     </Theme>
   )

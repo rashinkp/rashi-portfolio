@@ -7,6 +7,12 @@ export const routeMetadata = {
     url: `${siteUrl}/`,
     robots: 'index, follow',
   },
+  notFound: {
+    title: 'Page not found | Rashin KP',
+    description: 'This page wandered off. Head back to Rashin’s portfolio.',
+    url: `${siteUrl}/404`,
+    robots: 'noindex, follow',
+  },
   chat: {
     title: 'Ask Rashin | Portfolio',
     description: 'Ask Rashin’s AI portfolio assistant about his work, projects, skills, and engineering experience.',
@@ -17,8 +23,8 @@ export const routeMetadata = {
 
 // History API navigation must update metadata too, including returning from a
 // direct /chat visit. The static HTML still supplies these tags before JS runs.
-export function updateRouteMetadata(isChatPage: boolean) {
-  const metadata = isChatPage ? routeMetadata.chat : routeMetadata.home
+export function updateRouteMetadata(isChatPage: boolean, isNotFound = false) {
+  const metadata = isNotFound ? routeMetadata.notFound : isChatPage ? routeMetadata.chat : routeMetadata.home
   document.title = metadata.title
   const setMeta = (attribute: 'name' | 'property', key: string, content: string) => {
     let element = document.head.querySelector<HTMLMetaElement>(`meta[${attribute}="${key}"]`)

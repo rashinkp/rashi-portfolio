@@ -4,9 +4,9 @@ import { generateThemeCSS } from '@astryxdesign/core/theme'
 import App from './App'
 import { notebookTheme } from './theme/notebook'
 
-export function render() {
+export function render(initialPath = '/') {
   return {
-    html: renderToString(<StrictMode><App /></StrictMode>),
+    html: renderToString(<StrictMode><App initialPath={initialPath} /></StrictMode>),
     theme: generateThemeCSS(notebookTheme),
   }
 }

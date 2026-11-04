@@ -33,3 +33,18 @@ await writeFile(new URL('chat/index.html', output), withTheme
   .replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/g, ''),
 )
 console.log('Pre-rendered portfolio and emitted the chat app shell.')
+
+// Vercel serves this file for unmatched paths with a real HTTP 404 status.
+const missing = routeMetadata.notFound
+const { html: missingHtml } = render('/404')
+await writeFile(new URL('404.html', output), withTheme
+  .replace(root, `<section id="root" class="min-h-svh" data-prerendered="404">${missingHtml}</section>`)
+  .replace(/<title>[^<]*<\/title>/, `<title>${missing.title}</title>`)
+  .replace(/(<meta name="robots" content=")[^"]+/, `$1${missing.robots}`)
+  .replace(/(<meta name="description" content=")[^"]+/, `$1${missing.description}`)
+  .replace(/(<meta (?:property="og:title"|name="twitter:title") content=")[^"]+/g, `$1${missing.title}`)
+  .replace(/(<meta (?:property="og:description"|name="twitter:description") content=")[^"]+/g, `$1${missing.description}`)
+  .replace(/(<meta property="og:url" content=")[^"]+/, `$1${missing.url}`)
+  .replace(/\s*<link rel="canonical"[^>]*>/g, '')
+  .replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/g, ''),
+)

@@ -128,3 +128,26 @@ test('HTML assets and search discovery files are present in the deployment', asy
   assert.equal(favicon.readUInt32BE(16), 96)
   assert.equal(favicon.readUInt32BE(20), 96)
 })
+
+test('404 is rendered before JavaScript and excluded from indexing', async () => {
+  const missing = await readFile(new URL('404.html', output), 'utf8')
+  assert.match(missing, /data-prerendered="404"/)
+  assert.match(missing, /<h1\b[^>]*>This page wandered off\.<\/h1>/)
+  assert.match(missing, /href="\/"/)
+  assert.match(missing, /Back home/)
+  assert.match(missing, /lost-notebook-dots/)
+  assert.match(missing, /<meta name="robots" content="noindex, follow"/)
+  assert.doesNotMatch(missing, /application\/ld\+json|rel="canonical"|hey, I’m Rashin KP/)
+  assert.ok(missing.includes(`<title>${routeMetadata.notFound.title}</title>`))
+})
+
+test('unknown routes render the missing page while home still renders the portfolio', async () => {
+  const { render } = await import('../dist-ssr/entry-server.js')
+  for (const path of ['/missing', '/missing/nested/', '/chat/unknown', '/404']) {
+    // SSR uses the supplied path; browser navigation uses the same App route decision.
+    const { html } = render(path)
+    assert.match(html, /This page wandered off/)
+    assert.doesNotMatch(html, /hey, I’m Rashin KP/)
+  }
+  assert.match(render('/').html, /hey, I’m Rashin KP/)
+})

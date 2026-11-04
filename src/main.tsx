@@ -13,9 +13,11 @@ const app = (
   </StrictMode>
 )
 
-// A cached/fallback homepage response must not flash or hydrate the portfolio
-// when the actual browser route is chat.
-const isChatRoute = window.location.pathname.replace(/\/$/, '') === '/chat'
-if (isChatRoute && root.dataset.prerendered === 'true') root.replaceChildren()
-if (!isChatRoute && root.dataset.prerendered === 'true') hydrateRoot(root, app)
+// Hydrate only when the static shell matches the current route, including
+// unknown URLs served through a cached homepage or the custom 404 document.
+const isHomeRoute = window.location.pathname === '/'
+const isNotFoundShell = root.dataset.prerendered === '404'
+const canHydrate = isNotFoundShell ? !isHomeRoute && window.location.pathname.replace(/\/$/, '') !== '/chat' : isHomeRoute
+if (!canHydrate && root.dataset.prerendered) root.replaceChildren()
+if (canHydrate && root.dataset.prerendered) hydrateRoot(root, app)
 else createRoot(root).render(app)
